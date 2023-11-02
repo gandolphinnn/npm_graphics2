@@ -1,0 +1,19 @@
+{
+  "name": "@gandolphinnn/graphics2",
+  "version": "1.0.1",
+  "description": "High-level API for canvas scripting",
+  "main": "index.ts",
+  "scripts": {
+	"test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+	"type": "git",
+	"url": "git+https://github.com/gandolphinnn/npm_graphics2.git"
+  },
+  "author": "Gandolphinnn",
+  "license": "ISC",
+  "bugs": {
+	"url": "https://github.com/gandolphinnn/npm_graphics2/issues"
+  },
+  "homepage": "https://github.com/gandolphinnn/npm_graphics2#readme"
+}

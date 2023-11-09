@@ -3,6 +3,7 @@
 # Ignore test-related files
 /coverage.data
 /coverage/
+/.parcel-cache
 
 # Build files
 /dist

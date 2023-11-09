@@ -1,12 +1,14 @@
 {
   "name": "@gandolphinnn/graphics2",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "High-level API for canvas scripting",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["/dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "live": "tsc --watch && parcel index.html"
   },
   "repository": {
     "type": "git",
@@ -17,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/gandolphinnn/npm_graphics2/issues"
   },
-  "homepage": "https://github.com/gandolphinnn/npm_graphics2#readme"
+  "homepage": "https://github.com/gandolphinnn/npm_graphics2#readme",
+  "dependencies": {
+    "@gandolphinnn/graphics2": "^1.0.3"
+  }
 }

@@ -88,9 +88,8 @@ export class Canvas {
 			this.ctx.strokeStyle = color;
 		}
 	}
-	public PrintImage(img: HTMLImageElement, w: number, h: number, coord: Coord = this.SumCoordValues(this.center, -w/2, -h/2), rotation?: Angle) {
+	public PrintImage(img: HTMLImageElement, w: number, h: number, coord: Coord = this.SumCoordValues(this.center, -w/2, -h/2), rotation?: Angle, callback: Function = () => {}) {
 		img.onload = () => {
-			console.log(rotation);
 			if (rotation !== undefined) {
 				this.ctx.save()
 				this.Rotate(rotation)
@@ -100,6 +99,7 @@ export class Canvas {
 			else {
 				this.ctx.drawImage(img, coord.x, coord.y, w, h)
 			}
+			callback();
 		}
 	}
 	//#endregion

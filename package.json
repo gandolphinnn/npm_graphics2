@@ -1,26 +1,27 @@
 {
-  "name": "@gandolphinnn/graphics2",
-  "version": "1.0.3",
-  "description": "High-level API for canvas scripting",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "live": "tsc --watch && parcel index.html"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gandolphinnn/npm_graphics2.git"
-  },
-  "author": "Gandolphinnn",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/gandolphinnn/npm_graphics2/issues"
-  },
-  "homepage": "https://github.com/gandolphinnn/npm_graphics2#readme",
-  "dependencies": {
-    "@gandolphinnn/graphics2": "^1.0.3"
-  }
+	"name": "@gandolphinnn/graphics2",
+	"version": "1.0.3",
+	"description": "High-level API for canvas scripting",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"publish": "del /f \"dist\\test*\" && npm publish",
+		"live": "tsc --watch && parcel index.html"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gandolphinnn/npm_graphics2.git"
+	},
+	"author": "Gandolphinnn",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/gandolphinnn/npm_graphics2/issues"
+	},
+	"homepage": "https://github.com/gandolphinnn/npm_graphics2#readme",
+	"dependencies": {
+		"@gandolphinnn/utils": "^1.0.3"
+	}
 }

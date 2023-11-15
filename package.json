@@ -8,8 +8,9 @@
 		"dist"
 	],
 	"scripts": {
-		"publish": "del /f \"dist\\test*\" && npm publish",
-		"live": "tsc --watch && parcel index.html"
+		"live": "concurrently \"tsc --watch\" \"parcel index.html\"",
+		"clean": "rmdir \".parcel-cache\" && del /Q /f \"dist\" && tsc && del /Q /f \"dist\\test*\"",
+		"publish": "npm run clean && npm publish"
 	},
 	"repository": {
 		"type": "git",
@@ -22,6 +23,6 @@
 	},
 	"homepage": "https://github.com/gandolphinnn/npm_graphics2#readme",
 	"dependencies": {
-		"@gandolphinnn/utils": "^1.0.3"
+		"@gandolphinnn/utils": "^2.0.0"
 	}
 }

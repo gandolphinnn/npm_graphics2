@@ -15,24 +15,24 @@ export enum AngleType {
 	Radian
 }
 export enum BaseColor {
+	Aqua,
 	Black,
-	Silver,
-	Gray,
-	White,
-	Maroon,
-	Red,
-	Purple,
+	Blue,
 	Fuchsia,
+	Gray,
 	Green,
 	Lime,
-	Olive,
-	Yellow,
+	Maroon,
 	Navy,
-	Blue,
+	Olive,
+	Purple,
+	Red,
+	Silver,
 	Teal,
-	Aqua
+	White,
+	Yellow
 }
-export type Color = BaseColor |	`#${string}`; //todo make a string pattern
+export type Color = BaseColor |	string;
 export type Size = {
 	width: number,
 	height: number
@@ -77,7 +77,7 @@ export class Angle {
 		this._degrees = this._radians * 180 / Math.PI; //? First i must convert to degrees
 		this.normalize()
 	}
-	normalize() {
+	private normalize() {
 		this._degrees = overflow(this._degrees, 0, 359) //? Set degr to a 0 -> 359 range
 		this._radians = this._degrees * Math.PI / 180; //? Convert to radians
 	}
@@ -191,7 +191,9 @@ export class Canvas {
 	readonly ctx: CanvasRenderingContext2D;
 	canvasMode: CanvasMode;
 
-	elements: CnvElement[];
+	preElements: CnvElement[]; //todo avoid images in elements, maybe
+	images: Img[];
+	postElements: CnvElement[];
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
 	get id() { return this.cnv.id }
@@ -211,28 +213,28 @@ export class Canvas {
 			.apply((arr: Array<string>) => arr.filter(str => /^c\d+$/.test(str)))
 			.apply((arr: Array<string>) => arr.map(str => parseInt(str.slice(1), 10)))
 			.run(new Step((arr: Array<number>) => Math.max(...arr) + 1, (val: number) => val == -Infinity, 1))
-			.apply((n: number) => 'c' + n).log().value
+			.apply((n: number) => 'c' + n).log(true).value
 
 		//* Create the canvas
 		this.cnv = document.createElement("canvas");
 		this.cnv.id = newId;
 		switch (this.canvasMode) {
 			case CanvasMode.FullScreen:
-			this.cnv.width = window.innerWidth;
-			this.cnv.height = window.innerHeight;
-			body.style.overflow = 'hidden';
-			body.style.margin = '0px';
-			console.log(`Canvas ${newId} set in FullScreen mode`)
+				this.cnv.width = window.innerWidth;
+				this.cnv.height = window.innerHeight;
+				body.style.overflow = 'hidden';
+				body.style.margin = '0px';
+				console.log(`Canvas ${newId} set in FullScreen mode`)
 			break;
 			case CanvasMode.Window:
-			this.cnv.width = dimension.width;
-			this.cnv.height = dimension.height;
-			console.log(`Canvas ${newId} set in Window mode`)
+				this.cnv.width = dimension.width;
+				this.cnv.height = dimension.height;
+				console.log(`Canvas ${newId} set in Window mode`)
 			break;
 		}
 		body.appendChild(this.cnv)
 		this.ctx = this.cnv.getContext('2d')!;
-		console.log(this.ctx.textAlign);
+		//tests
 	}
 	//#endregion
 

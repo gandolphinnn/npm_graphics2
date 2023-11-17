@@ -96,6 +96,14 @@ export class Angle {
 	get atanh() { return Math.atanh(this._radians); }
 	//#endregion
 }
+export class Texture { //todo fix name
+	items: CnvElement[];
+	out(cnv: Canvas) {
+		this.items.forEach(item => {
+			item.out(cnv);
+		});
+	}
+}
 export abstract class CnvElement { //todo
 	_center: Coord;
 	set center(coord: Coord) { throw new Error('This method must be overridden in the child class') }

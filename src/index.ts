@@ -1,4 +1,4 @@
-import { Monad, Step, overflow } from '@gandolphinnn/utils';
+import { Monad, Step, isnull, overflow } from '@gandolphinnn/utils';
 
 //#region Enums, Types and Interfaces
 export enum DrawAction {
@@ -37,6 +37,7 @@ export type Size = {
 	width: number,
 	height: number
 }
+export interface Component {} //? This will be useful later, in rigid2 and game2
 //#endregion
 
 //#region Classes
@@ -47,10 +48,6 @@ export class Coord {
 	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;
-	}
-	add(x: number, y: number) {
-		this.x += x;
-		this.y += y;
 	}
 };
 export class Angle {
@@ -96,8 +93,12 @@ export class Angle {
 	get atanh() { return Math.atanh(this._radians); }
 	//#endregion
 }
-export class Texture { //todo fix name
+export class Mesh implements Component {
 	items: CnvElement[];
+	zIndex: number;
+	private readonly _center: Coord;
+	set center(coord: Coord) { this }
+	get center() { return this._center; }
 	out(cnv: Canvas) {
 		this.items.forEach(item => {
 			item.out(cnv);
@@ -105,7 +106,12 @@ export class Texture { //todo fix name
 	}
 }
 export abstract class CnvElement { //todo
-	_center: Coord;
+	private _center: Coord;
+	strokeStyle: Color = null;
+	fillStyle: Color = null;
+	zIndex: number;
+	get action() { return (!isnull(this.strokeStyle) && !isnull(this.fillStyle))}
+	
 	set center(coord: Coord) { throw new Error('This method must be overridden in the child class') }
 	get center() { return this._center; }
 	moveBy(x: number, y: number) {
@@ -173,7 +179,7 @@ export class Poly extends CnvElement {
 }
 export class Rect extends Poly {
 	constructor() {
-	super();
+		super();
 	}
 	set center(coord: Coord) {
 
@@ -183,8 +189,11 @@ export class Rect extends Poly {
 	}
 }
 export class Circle extends Poly {
-	constructor() {
-	super();
+	radius: number
+	constructor(center: Coord, radius: number) {
+		super();
+		this.center = center;
+		this.radius = radius;
 	}
 	set center(coord: Coord) {
 
@@ -298,29 +307,6 @@ export class Canvas {
 	removeElement(elementIndex: number) {
 
 	}
-	drawCircle(coord: Coord, radius: number, drawAction: DrawAction = DrawAction.Both) {
-		this.ctx.beginPath();
-		this.ctx.arc(coord.x, coord.y, radius, 0, Math.PI * 2);
-		this.action(drawAction)
-	}
-	drawRectByVal(coord: Coord, width: number, length: number, drawAction: DrawAction = DrawAction.Both) {
-		this.ctx.beginPath();
-		this.ctx.rect(coord.x, coord.y, width, length);
-		this.action(drawAction)
-	}
-	drawRectByCoords(coord1: Coord, coord2: Coord, drawAction: DrawAction = DrawAction.Both) {
-		let x = (coord2.x < coord1.x) ? coord2.x : coord1.x;
-		let y = (coord2.y < coord1.y) ? coord2.y : coord1.y;
-		let width = Math.abs(coord1.x - coord2.x);
-		let height = Math.abs(coord1.y - coord2.y);
-		this.drawRectByVal(new Coord(x, y), width, height, drawAction);
-	}
-	drawLine(coord1: Coord, coord2: Coord, drawAction: DrawAction = DrawAction.Both) {
-		this.ctx.beginPath();
-		this.ctx.moveTo(coord1.x, coord1.y);
-		this.ctx.lineTo(coord2.x, coord2.y);
-		this.action(drawAction)
-	}
 	drawSampleUnits(testunit: number = 0) {
 		let sampleUnits = [1, 5, 10, 50, 100, 250, 500, 1000];
 		if (testunit > 0 && testunit < this.cnv.width && sampleUnits.indexOf(testunit) == -1) {
@@ -334,23 +320,23 @@ export class Canvas {
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
 			this.writeText(unit.toString(), sumCoordValues(coord, -30, +3))
-			this.drawLine(coord, sumCoordValues(coord, unit, 0), DrawAction.Stroke);
-			coord.add(0, 20);
+			new Line(coord, sumCoordValues(coord, unit, 0)).out(this);
+			sumCoordValues(coord, 0, 20);
 		});
 	}
 	drawSampleMetric(scale: number = 50) {
 		this.ctx.lineWidth = 1;
 		this.ctx.textAlign = "left";
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical
-			this.drawLine(new Coord(x, 0), new Coord(x, this.cnv.height), DrawAction.Both)
+			new Line(new Coord(x, 0), new Coord(x, this.cnv.height))
 			this.writeText(x.toString(), new Coord(x, 10))
 		}
 		this.ctx.textAlign = "left";
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal
-			this.drawLine(new Coord(0, y), new Coord(this.cnv.width, y), DrawAction.Both)
+			new Line(new Coord(0, y), new Coord(this.cnv.width, y))
 			this.writeText(y.toString(), new Coord(35, y - 5))
 		}
-		this.drawCircle(this.center, 5, DrawAction.Both)
+		new Circle(this.center, 5)
 	}
 	//#endregion
 }
@@ -364,5 +350,10 @@ export function sumCoordValues(coord1: Coord, x: number, y: number) {
 }
 export function coordDistance(coord1: Coord, coord2: Coord) {
 	return Math.sqrt(((coord1.x - coord2.x) ** 2) + ((coord1.y - coord2.y) ** 2));
+}
+export function getAction(strokeStyle: Color, fillStyle: Color) {
+	if (!isnull(strokeStyle) && isnull(fillStyle)) {
+		
+	}
 }
 //#endregion

@@ -1,4 +1,6 @@
-import { Angle, Canvas, CanvasMode, Coord, DrawAction } from './index.js';
+import * as G from './index.js';
 
-let c1 = new Canvas(CanvasMode.FullScreen);
+
+let c1 = new G.Canvas(G.CanvasMode.FullScreen);
+//c1.rotate(new Angle(45))
 c1.drawSampleMetric()

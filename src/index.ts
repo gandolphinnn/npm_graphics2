@@ -1,18 +1,23 @@
-import { Monad, Step, isnull, overflow } from '@gandolphinnn/utils';
+import { Monad, Step, isNull, areNull, overflow } from '@gandolphinnn/utils';
 
 //#region Enums, Types and Interfaces
-export enum DrawAction {
-	Stroke,
-	Fill,
-	Both
-}
 export enum CanvasMode {
 	FullScreen,
 	Window,
 }
+export enum RenderMode {
+	Stroke,
+	Fill,
+	Both,
+	None
+}
 export enum AngleType {
 	Degree,
 	Radian
+}
+export enum Rotation {
+	Clockwise,
+	CounterClockwise
 }
 export enum BaseColor {
 	Aqua,
@@ -99,112 +104,151 @@ export class Mesh implements Component {
 	private readonly _center: Coord;
 	set center(coord: Coord) { this }
 	get center() { return this._center; }
-	out(cnv: Canvas) {
+	render() {
 		this.items.forEach(item => {
-			item.out(cnv);
+			item.render();
 		});
 	}
 }
 export abstract class CnvElement { //todo
-	private _center: Coord;
+	canvas: Canvas
 	strokeStyle: Color = null;
 	fillStyle: Color = null;
 	zIndex: number;
-	get action() { return (!isnull(this.strokeStyle) && !isnull(this.fillStyle))}
+	get action() {
+		if (areNull(this.strokeStyle, this.fillStyle)) {
+			return RenderMode.None;
+		}
+		if (isNull(this.fillStyle)) {
+			return RenderMode.Stroke;
+		}
+		if (isNull(this.strokeStyle)) {
+			return RenderMode.Fill;
+		}
+		return RenderMode.Both;
+	}
+	constructor(canvas: Canvas) {
+		this.canvas = canvas
+	}
+	/*private _center: Coord;
+	private _size: Size;
 	
 	set center(coord: Coord) { throw new Error('This method must be overridden in the child class') }
 	get center() { return this._center; }
+	set size(size: Size) { throw new Error('This method must be overridden in the child class') }
+	get size() { return this._size; }
+
 	moveBy(x: number, y: number) {
 		this.center = new Coord(this.center.x + x, this.center.y + y);
-	}
-	abstract out(cnv: Canvas): void;
+	}*/
+	abstract render(): void;
 }
 export class Text extends CnvElement { //todo
+	center: Coord;
 	text: string;
-	constructor(text: string, fontSize: number = null, font: string = null) {
-		super();
+	align: string; //todo
+	constructor(canvas:Canvas, center: Coord, text: string) {
+		super(canvas);
+		this.center = center;
 		this.text = text;
 	}
-	set center(coord: Coord) {
-
-	}
-	out(cnv: Canvas) {
-		cnv.ctx.fillText(this.text, this.center.x, this.center.y);
+	render() {
+		this.canvas.ctx.fillText(this.text, this.center.x, this.center.y);
 	}
 }
 export class Img extends CnvElement { //todo
-	constructor() {
-		super();
+	center: Coord;
+	src: string;
+	size: Size;
+	constructor(canvas:Canvas, center: Coord, src: string, size: Size) {
+		super(canvas);
+		this.center = center;
+		this.src = src;
+		this.size = size;
 	}
-	set center(coord: Coord) {
-
-	}
-	out(cnv: Canvas) {
-
+	render() {
+		
 	}
 }
 export class Line extends CnvElement { //todo
-	public coords: Coord[];
+	center: Coord;
+	point: Coord[];
 
-	constructor(coord1: Coord, coord2: Coord) {
-		super();
-		this.coords = [coord1, coord2];
-	}
-	set center(coord: Coord) {
-
+	constructor(canvas:Canvas, point1: Coord, point2: Coord) {
+		super(canvas);
+		this.point = [point1, point2];
+		this.center
 	}
 
 	get length() {
-		return Math.sqrt(((this.coords[0].x - this.coords[1].x) ** 2) + ((this.coords[0].y - this.coords[1].y) ** 2))
+		return Math.sqrt(((this.point[0].x - this.point[1].x) ** 2) + ((this.point[0].y - this.point[1].y) ** 2))
 	}
-	out(cnv: Canvas) {
-
+	render() {
+		this.canvas.ctx.beginPath();
+		this.canvas.ctx.moveTo(this.point[0].x, this.point[0].y);
+		this.canvas.ctx.lineTo(this.point[1].x, this.point[1].y);
+		this.canvas.ctx.stroke();
 	}
 };
-export class Poly extends CnvElement {
+export class Path extends CnvElement {
 	corners: Coord[];
-	constructor() {
-		super();
+	constructor(canvas:Canvas, ) {
+		super(canvas);
 	}
 	set center(coord: Coord) {
-
+		
 	}
 	get nCorners() { return this.corners.length }
 	get size() { return 'Todo' }
 	get perimeter() { return 'Todo' }
-	get area() { return 'Todo, dont know if its possible to calculate on an irregulare poly' }
-	out(cnv: Canvas) {
+	get area() { return 'Todo' }
+	render() {
+		this.canvas.ctx.beginPath();
+		for(const corner in this.corners) {
 
+		}
+		this.canvas.ctx.stroke();
 	}
 }
-export class Rect extends Poly {
-	constructor() {
-		super();
+export class Rect extends CnvElement {
+	center: Coord;
+	size: Size;
+	
+	constructor(canvas:Canvas, center: Coord, size: Size) {
+		super(canvas);
+		this.center = center; 
+		this.size = size; 
 	}
-	set center(coord: Coord) {
-
-	}
-	out(cnv: Canvas) {
-
+	get perimeter() { return (this.size.height + this.size.width) * 2 }
+	get area() { return this.size.height * this.size.width }
+	render() {
+		this.canvas.ctx.rect(this.center.x, this.center.y, this.size.width, this.size.height);
+		this.canvas.action(this.action);
 	}
 }
-export class Circle extends Poly {
-	radius: number
-	constructor(center: Coord, radius: number) {
-		super();
+export class Arc extends CnvElement {
+	center: Coord;
+	radius: number;
+	start: Angle;
+	end: Angle;
+	rotation: Rotation;
+	constructor(canvas:Canvas, center: Coord, radius: number, start: Angle = new Angle(0), end: Angle = new Angle(0), rotation: Rotation = Rotation.Clockwise) {
+		super(canvas);
 		this.center = center;
 		this.radius = radius;
+		this.start = start; 
+		this.end = end; 
+		this.rotation = rotation; 
 	}
-	set center(coord: Coord) {
-
-	}
-	out(cnv: Canvas) {
-
+	get diameter() { return this.radius*2 };
+	set diameter(diameter: number) { this.radius = diameter / 2 };
+	render() {
+		this.canvas.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotation == Rotation.CounterClockwise)
 	}
 }
 export class Canvas {
 	//#region Definition
-	readonly cnv: HTMLCanvasElement;
+	readonly canvas: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
 	canvasMode: CanvasMode;
 
@@ -212,8 +256,8 @@ export class Canvas {
 	images: Img[];
 	postElements: CnvElement[];
 
-	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
-	get id() { return this.cnv.id }
+	get center() { return new Coord(this.canvas.width / 2, this.canvas.height / 2) }
+	get id() { return this.canvas.id }
 
 	constructor(canvasMode: CanvasMode, dimension: Size = { width: 0, height: 0 }) {
 		this.canvasMode = canvasMode;
@@ -230,54 +274,54 @@ export class Canvas {
 			.apply((arr: Array<string>) => arr.filter(str => /^c\d+$/.test(str)))
 			.apply((arr: Array<string>) => arr.map(str => parseInt(str.slice(1), 10)))
 			.run(new Step((arr: Array<number>) => Math.max(...arr) + 1, (val: number) => val == -Infinity, 1))
-			.apply((n: number) => 'c' + n).log(true).value
+			.apply((n: number) => 'c' + n).value
 
 		//* Create the canvas
-		this.cnv = document.createElement("canvas");
-		this.cnv.id = newId;
+		this.canvas = document.createElement("canvas");
+		this.canvas.id = newId;
 		switch (this.canvasMode) {
 			case CanvasMode.FullScreen:
-				this.cnv.width = window.innerWidth;
-				this.cnv.height = window.innerHeight;
+				this.canvas.width = window.innerWidth;
+				this.canvas.height = window.innerHeight;
 				body.style.overflow = 'hidden';
 				body.style.margin = '0px';
 				console.log(`Canvas ${newId} set in FullScreen mode`)
 			break;
 			case CanvasMode.Window:
-				this.cnv.width = dimension.width;
-				this.cnv.height = dimension.height;
+				this.canvas.width = dimension.width;
+				this.canvas.height = dimension.height;
 				console.log(`Canvas ${newId} set in Window mode`)
 			break;
 		}
-		body.appendChild(this.cnv)
-		this.ctx = this.cnv.getContext('2d')!;
+		body.appendChild(this.canvas)
+		this.ctx = this.canvas.getContext('2d')!;
 		//tests
 	}
 	//#endregion
 
 	//#region Screen
 	clean() {
-		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 	rotate(angle: Angle = new Angle(0)) {
 		this.ctx.rotate(angle.radians)
 	}
-	action(drawAction: DrawAction) {
-		if (drawAction == DrawAction.Both || drawAction == DrawAction.Fill) {
+	action(drawAction: RenderMode) {
+		if (drawAction == RenderMode.Both || drawAction == RenderMode.Fill) {
 			this.ctx.fill();
 		}
-		if (drawAction == DrawAction.Both || drawAction == DrawAction.Stroke) {
+		if (drawAction == RenderMode.Both || drawAction == RenderMode.Stroke) {
 			this.ctx.stroke();
 		}
 	}
 	writeText(text: string, coord: Coord) { //todo
 		this.ctx.fillText(text, coord.x - 10, coord.y)
 	}
-	setColor(color: string, drawAction: DrawAction) {
-		if (drawAction == DrawAction.Both || drawAction == DrawAction.Fill) {
+	setColor(color: string, drawAction: RenderMode) {
+		if (drawAction == RenderMode.Both || drawAction == RenderMode.Fill) {
 			this.ctx.fillStyle = color;
 		}
-		if (drawAction == DrawAction.Both || drawAction == DrawAction.Stroke) {
+		if (drawAction == RenderMode.Both || drawAction == RenderMode.Stroke) {
 			this.ctx.strokeStyle = color;
 		}
 	}
@@ -309,7 +353,7 @@ export class Canvas {
 	}
 	drawSampleUnits(testunit: number = 0) {
 		let sampleUnits = [1, 5, 10, 50, 100, 250, 500, 1000];
-		if (testunit > 0 && testunit < this.cnv.width && sampleUnits.indexOf(testunit) == -1) {
+		if (testunit > 0 && testunit < this.canvas.width && sampleUnits.indexOf(testunit) == -1) {
 			sampleUnits.push(testunit);
 			sampleUnits.sort(function (a, b) {
 			return a - b;
@@ -320,23 +364,23 @@ export class Canvas {
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
 			this.writeText(unit.toString(), sumCoordValues(coord, -30, +3))
-			new Line(coord, sumCoordValues(coord, unit, 0)).out(this);
+			new Line(this, coord, sumCoordValues(coord, unit, 0)).render();
 			sumCoordValues(coord, 0, 20);
 		});
 	}
 	drawSampleMetric(scale: number = 50) {
 		this.ctx.lineWidth = 1;
 		this.ctx.textAlign = "left";
-		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical
-			new Line(new Coord(x, 0), new Coord(x, this.cnv.height))
+		for (let x = scale; x < this.canvas.width; x += scale) { //? Vertical
+			new Line(this, new Coord(x, 0), new Coord(x, this.canvas.height)).render()
 			this.writeText(x.toString(), new Coord(x, 10))
 		}
 		this.ctx.textAlign = "left";
-		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal
-			new Line(new Coord(0, y), new Coord(this.cnv.width, y))
+		for (let y = scale; y < this.canvas.height; y += scale) { //? Horizontal
+			new Line(this, new Coord(0, y), new Coord(this.canvas.width, y)).render()
 			this.writeText(y.toString(), new Coord(35, y - 5))
 		}
-		new Circle(this.center, 5)
+		new Arc(this, this.center, 5)
 	}
 	//#endregion
 }
@@ -350,10 +394,5 @@ export function sumCoordValues(coord1: Coord, x: number, y: number) {
 }
 export function coordDistance(coord1: Coord, coord2: Coord) {
 	return Math.sqrt(((coord1.x - coord2.x) ** 2) + ((coord1.y - coord2.y) ** 2));
-}
-export function getAction(strokeStyle: Color, fillStyle: Color) {
-	if (!isnull(strokeStyle) && isnull(fillStyle)) {
-		
-	}
 }
 //#endregion

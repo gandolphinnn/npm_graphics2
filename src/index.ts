@@ -25,12 +25,16 @@ export enum BaseColor {
 	MediumTurquoise, MediumVioletRed, MidnightBlue, MintCream, MistyRose, Moccasin, NavajoWhite, Navy,
 	OldLace, Olive, OliveDrab, Orange, OrangeRed, Orchid, PaleGoldenRod, PaleGreen, PaleTurquoise, PaleVioletRed, PapayaWhip, PeachPuff, Peru, Pink, Plum, PowderBlue, Purple,
 	RebeccaPurple, Red, RosyBrown, RoyalBlue, SaddleBrown, Salmon, SandyBrown, SeaGreen, SeaShell, Sienna, Silver, SkyBlue, SlateBlue, SlateGrey, Snow, SpringGreen, SteelBlue,
-	Tan, Teal, Thistle, Tomato, Turquoise, Violet, Wheat, White, WhiteSmoke, Yellow, YellowGreen, 
+	Tan, Teal, Thistle, Tomato, Turquoise, Violet, Wheat, White, WhiteSmoke, Yellow, YellowGreen
 }
 export type RenderStyle = {
 	lineWidth?: number,
 	stroke?: Color,
 	fill?: Color
+}
+export type TextStyle = {
+	align?: CanvasTextAlign;
+	font?: string;
 }
 export type Size = {
 	width: number,
@@ -282,33 +286,28 @@ export class Mesh implements Component {
 }
 export abstract class CnvElement { //todo
 	canvas: Canvas
-	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	action: RenderAction;
+	center: Coord;
 	zIndex: number;
-	constructor(canvas: Canvas, action: RenderAction) {
+	constructor(canvas: Canvas) {
 		this.canvas = canvas;
-		this.action = action;
 	}
 	abstract render(): void;
 }
 export class Text extends CnvElement { //todo
-	center: Coord;
-	text: string;
-	align: CanvasTextAlign;
-	font: string;
-	constructor(canvas: Canvas, center: Coord, text: string, align: CanvasTextAlign, font?: string) {
-		super(canvas, RenderAction.Both);
+	content: string;
+	style: TextStyle;
+	constructor(canvas: Canvas, center: Coord, content: string, style: TextStyle) {
+		super(canvas);
 		this.center = center;
-		this.text = text;
-		this.align = align;
-		this.font = font;
+		this.content = content;
+		this.style = style;
 	}
 	render() {
 		const ctx = this.canvas.ctx;
 		ctx.save();
-		ctx.textAlign = this.align;
-		ctx.font = this.font;
-		ctx.fillText(this.text, this.center.x, this.center.y);
+		ctx.textAlign = coalesce(this.style.align, ctx.textAlign);
+		ctx.font = coalesce(this.style.font, ctx.font);
+		ctx.fillText(this.content, this.center.x, this.center.y);
 		ctx.restore();
 	}
 }
@@ -318,36 +317,39 @@ export class Img extends CnvElement { //todo
 	size: Size;
 	img: HTMLImageElement;
 	constructor(canvas: Canvas, center: Coord, src: string, size: Size) {
-		super(canvas, RenderAction.None);
+		super(canvas);
 		this.center = center;
 		this.src = src;
 		this.size = size;
-		let tmpImage = new Image()
-		tmpImage.src = this.src;
-		console.log(tmpImage);
+		this.img = new Image()
+		this.img.src = this.src;
+		console.log(this);
 		
-		tmpImage.onload = () => {
-			this.img = tmpImage;
-			console.log('asd');
-		}
 	}
 	render() {
-		this.canvas.ctx.drawImage(this.img, this.center.x, this.center.y, this.size.width, this.size.height)
+		this.img.onload = () => {
+			this.canvas.ctx.drawImage(this.img, this.center.x, this.center.y, this.size.width, this.size.height);
+			console.log('re');
+			
+		}
 	}
 }
 export class Line extends CnvElement { //todo
 	center: Coord;
 	point: Coord[];
+	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
+	action: RenderAction;
 	constructor(canvas: Canvas, point1: Coord, point2: Coord) {
-		super(canvas, RenderAction.Stroke);
+		super(canvas);
 		this.point = [point1, point2];
 		this.center
 	}
 	get length() {
-		return Math.sqrt(((this.point[0].x - this.point[1].x) ** 2) + ((this.point[0].y - this.point[1].y) ** 2))
+		return coordDistance(this.point[0], this.point[1]);
 	}
 	render() {
 		this.canvas.ctx.beginPath();
+		this.canvas.ctx.closePath();
 		this.canvas.ctx.moveTo(this.point[0].x, this.point[0].y);
 		this.canvas.ctx.lineTo(this.point[1].x, this.point[1].y);
 		this.canvas.ctx.stroke();
@@ -355,11 +357,12 @@ export class Line extends CnvElement { //todo
 }
 export class Triangle extends CnvElement { //todo
 	corners: Coord[];
-	constructor(canvas: Canvas, action: RenderAction) {
-		super(canvas, action);
-	}
-	set center(coord: Coord) {
-		
+	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
+	action: RenderAction;
+	constructor(canvas: Canvas, action: RenderAction, p1: Coord, p2: Coord, p3: Coord) {
+		super(canvas);
+		this.action = action;
+
 	}
 	get size() { return 'Todo' }
 	get perimeter() { return 'Todo' }
@@ -370,12 +373,13 @@ export class Triangle extends CnvElement { //todo
 		this.canvas.ctx.stroke();
 	}
 }
-export class Rect extends CnvElement { //todo
-	center: Coord;
+export class Rect extends CnvElement{ //todo
+	action: RenderAction;
 	size: Size;
-	
+	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
 	constructor(canvas: Canvas, action: RenderAction, center: Coord, size: Size) {
-		super(canvas, action);
+		super(canvas);
+		this.action = action;
 		this.center = center; 
 		this.size = size; 
 	}
@@ -386,23 +390,27 @@ export class Rect extends CnvElement { //todo
 	}
 }
 export class Arc extends CnvElement { //todo
-	center: Coord;
+	action: RenderAction;
 	radius: number;
 	start: Angle;
 	end: Angle;
 	rotation: Rotation;
-	constructor(canvas: Canvas, action: RenderAction, center: Coord, radius: number, start: Angle = new Angle(0), end: Angle = new Angle(0), rotation: Rotation = Rotation.Clockwise) {
-		super(canvas, action);
+	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
+	constructor(canvas: Canvas, action: RenderAction, center: Coord, radius: number, style: RenderStyle, start: Angle = new Angle(0), end: Angle = new Angle(0), rotation: Rotation = Rotation.Clockwise) {
+		super(canvas);
+		this.action = action;
 		this.center = center;
+		this.style = style;
 		this.radius = radius;
 		this.start = start; 
 		this.end = end; 
 		this.rotation = rotation; 
 	}
-	get diameter() { return this.radius*2 };
+	get diameter() { return this.radius * 2 };
 	set diameter(diameter: number) { this.radius = diameter / 2 };
 	render() {
 		this.canvas.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotation == Rotation.CounterClockwise)
+		this.canvas.action(this.action, this.style);
 	}
 }
 export class Canvas {
@@ -524,9 +532,9 @@ export class Canvas {
 		}
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			new Line(this, new Coord(0, y), new Coord(this.cnv.width, y)).render()
-			new Text(this, new Coord(5, y-5), y.toString(), 'left').render()
+			new Text(this, new Coord(5, y-5), y.toString(), {align: 'left'}).render()
 		}
-		new Arc(this, RenderAction.Both, this.center, 5).render();
+		new Arc(this, RenderAction.Both, this.center, 5, {}).render();
 	}
 	//#endregion
 }

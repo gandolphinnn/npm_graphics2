@@ -1,7 +1,8 @@
 import * as g from './index.js';
 import { } from '@gandolphinnn/utils';
 
-
+const img = document.createElement("img");
+img.src = ''
 let c1 = new g.Canvas(g.CanvasMode.FullScreen);
 c1.cnv.style.zIndex = '0';
 c1.cnv.style.backgroundColor = new g.Color(g.BaseColor.Grey).hex;
@@ -11,8 +12,8 @@ console.log(c1);
 c1.ctx.reset();
 
 c1.drawSampleMetric(true)
-const i = new g.Img(c1, c1.center, '../media/red.png', {width: 300, height: 300})
-console.log(i.img);
+const i = new g.Img(c1, c1.center, 'red.png', {width: 300, height: 300});
+i.render()
 
 //setInterval(() => {i.render()}, 1000)
 /*
@@ -23,6 +24,8 @@ c2.drawSampleMetric()
 */
 
 const l = new g.Line(c1, new g.Coord(0, 0), new g.Coord(200, 200))
+l.render();
+l.point[0] = new g.Coord(500, 158);
 l.render();
 // l.canvas = c2;
 // l.render();

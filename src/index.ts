@@ -1,4 +1,4 @@
-import { Monad, Step, isNull, areNull, overflow } from '@gandolphinnn/utils';
+import { Monad, Step, isNull, areNull, overflow, clamp, coalesce } from '@gandolphinnn/utils';
 
 //#region Enums, Types, Interfaces and Constants
 export enum CanvasMode {
@@ -14,29 +14,21 @@ export enum Rotation {
 	Clockwise, CounterClockwise
 }
 export enum BaseColor {
-	AliceBlue, AntiqueWhite, Aqua, Aquamarine, Azure,
-	Beige, Bisque, Black, BlanchedAlmond, Blue, BlueViolet, Brown, BurlyWood,
+	AliceBlue, AntiqueWhite, Aqua, Aquamarine, Azure, Beige, Bisque, Black, BlanchedAlmond, Blue, BlueViolet, Brown, BurlyWood,
 	CadetBlue, Chartreuse, Chocolate, Coral, CornflowerBlue, Cornsilk, Crimson, Cyan,
-	DarkBlue, DarkCyan, DarkGoldenRod, DarkGrey, DarkGreen, DarkKhaki, DarkMagenta, DarkOliveGreen, DarkOrange, DarkOrchid, DarkRed, DarkSalmon, DarkSeaGreen, DarkSlateBlue, DarkSlateGrey, DarkTurquoise, DarkViolet, DeepPink, DeepSkyBlue, DimGrey, DodgerBlue,
-	FireBrick, FloralWhite, ForestGreen, Fuchsia,
-	Gainsboro, GhostWhite, Gold, GoldenRod, Grey, Green, GreenYellow,
-	HoneyDew, HotPink,
-	IndianRed, Indigo, Ivory,
-	Khaki,
-	Lavender, LavenderBlush, LawnGreen, LemonChiffon, LightBlue, LightCoral, LightCyan, LightGoldenRodYellow, LightGrey, LightGreen, LightPink, LightSalmon, LightSeaGreen, LightSkyBlue, LightSlateGrey, LightSteelBlue, LightYellow, Lime, LimeGreen, Linen,
-	Magenta, Maroon, MediumAquaMarine, MediumBlue, MediumOrchid, MediumPurple, MediumSeaGreen, MediumSlateBlue, MediumSpringGreen, MediumTurquoise, MediumVioletRed, MidnightBlue, MintCream, MistyRose, Moccasin,
-	NavajoWhite, Navy,
-	OldLace, Olive, OliveDrab, Orange, OrangeRed, Orchid,
-	PaleGoldenRod, PaleGreen, PaleTurquoise, PaleVioletRed, PapayaWhip, PeachPuff, Peru, Pink, Plum, PowderBlue, Purple,
-	RebeccaPurple, Red, RosyBrown, RoyalBlue,
-	SaddleBrown, Salmon, SandyBrown, SeaGreen, SeaShell, Sienna, Silver, SkyBlue, SlateBlue, SlateGrey, Snow, SpringGreen, SteelBlue,
-	Tan, Teal, Thistle, Tomato, Turquoise,
-	Violet,
-	Wheat, White, WhiteSmoke,
-	Yellow, YellowGreen, 
+	DarkBlue, DarkCyan, DarkGoldenRod, DarkGrey, DarkGreen, DarkKhaki, DarkMagenta, DarkOliveGreen, DarkOrange, DarkOrchid, DarkRed,
+	DarkSalmon, DarkSeaGreen, DarkSlateBlue, DarkSlateGrey, DarkTurquoise, DarkViolet, DeepPink, DeepSkyBlue, DimGrey, DodgerBlue,
+	FireBrick, FloralWhite, ForestGreen, Fuchsia, Gainsboro, GhostWhite, Gold, GoldenRod, Grey, Green, GreenYellow,
+	HoneyDew, HotPink, IndianRed, Indigo, Ivory, Khaki, Lavender, LavenderBlush, LawnGreen, LemonChiffon, LightBlue, LightCoral, LightCyan, LightGoldenRodYellow,
+	LightGrey, LightGreen, LightPink, LightSalmon, LightSeaGreen, LightSkyBlue, LightSlateGrey, LightSteelBlue, LightYellow, Lime, LimeGreen, Linen,
+	Magenta, Maroon, MediumAquaMarine, MediumBlue, MediumOrchid, MediumPurple, MediumSeaGreen, MediumSlateBlue, MediumSpringGreen,
+	MediumTurquoise, MediumVioletRed, MidnightBlue, MintCream, MistyRose, Moccasin, NavajoWhite, Navy,
+	OldLace, Olive, OliveDrab, Orange, OrangeRed, Orchid, PaleGoldenRod, PaleGreen, PaleTurquoise, PaleVioletRed, PapayaWhip, PeachPuff, Peru, Pink, Plum, PowderBlue, Purple,
+	RebeccaPurple, Red, RosyBrown, RoyalBlue, SaddleBrown, Salmon, SandyBrown, SeaGreen, SeaShell, Sienna, Silver, SkyBlue, SlateBlue, SlateGrey, Snow, SpringGreen, SteelBlue,
+	Tan, Teal, Thistle, Tomato, Turquoise, Violet, Wheat, White, WhiteSmoke, Yellow, YellowGreen, 
 }
 export type RenderStyle = {
-	width?: number,
+	lineWidth?: number,
 	stroke?: Color,
 	fill?: Color
 }
@@ -209,11 +201,11 @@ export class Color {
 	}
 	set(baseColor?: BaseColor, rgb?: RGB, alpha: number = 1) {
 		if (isNull(baseColor)) {
-			if (typeof rgb.red === 'string') rgb.red = parseInt(rgb.red, 16);
+			if (typeof rgb.red === 'string') rgb.red = hexToDec(rgb.red);
 			this.red = rgb.red;
-			if (typeof rgb.green === 'string') rgb.green = parseInt(rgb.green, 16);
+			if (typeof rgb.green === 'string') rgb.green = hexToDec(rgb.green);
 			this.green = rgb.green;
-			if (typeof rgb.blue === 'string') rgb.blue = parseInt(rgb.blue, 16);
+			if (typeof rgb.blue === 'string') rgb.blue = hexToDec(rgb.blue);
 			this.blue = rgb.blue;
 		}
 		else {
@@ -237,16 +229,6 @@ export class Coord {
 export class Angle {
 	private _degrees: number;
 	private _radians: number;
-
-	constructor(alpha: number, type: AngleType = AngleType.Degree) {
-		if (type == AngleType.Degree) {
-			this.degrees = alpha;
-		}
-		else if (type == AngleType.Radian) {
-			this.radians = alpha;
-		}
-		else { throw new Error('Invalid angle type'); }
-	}
 	get degrees() { return this._degrees; }
 	get radians() { return this._radians; }
 	set degrees(alpha: number) {
@@ -257,6 +239,15 @@ export class Angle {
 		this._radians = alpha;
 		this._degrees = this._radians * 180 / Math.PI; //? First i must convert to degrees
 		this.normalize()
+	}
+	constructor(alpha: number, type: AngleType = AngleType.Degree) {
+		if (type == AngleType.Degree) {
+			this.degrees = alpha;
+		}
+		else if (type == AngleType.Radian) {
+			this.radians = alpha;
+		}
+		else { throw new Error('Invalid angle type'); }
 	}
 	private normalize() {
 		this._degrees = overflow(this._degrees, 0, 359) //? Set degr to a 0 -> 359 range
@@ -291,23 +282,13 @@ export class Mesh implements Component {
 }
 export abstract class CnvElement { //todo
 	canvas: Canvas
-	style: RenderStyle = {width: null, stroke: null, fill: null}
+	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
 	action: RenderAction;
 	zIndex: number;
-	constructor(canvas: Canvas) {
-		this.canvas = canvas
+	constructor(canvas: Canvas, action: RenderAction) {
+		this.canvas = canvas;
+		this.action = action;
 	}
-	/*private _center: Coord;
-	private _size: Size;
-	
-	set center(coord: Coord) { throw new Error('This method must be overridden in the child class') }
-	get center() { return this._center; }
-	set size(size: Size) { throw new Error('This method must be overridden in the child class') }
-	get size() { return this._size; }
-
-	moveBy(x: number, y: number) {
-		this.center = new Coord(this.center.x + x, this.center.y + y);
-	}*/
 	abstract render(): void;
 }
 export class Text extends CnvElement { //todo
@@ -315,8 +296,8 @@ export class Text extends CnvElement { //todo
 	text: string;
 	align: CanvasTextAlign;
 	font: string;
-	constructor(canvas: Canvas, center: Coord, text: string, align: CanvasTextAlign, font: string) {
-		super(canvas);
+	constructor(canvas: Canvas, center: Coord, text: string, align: CanvasTextAlign, font?: string) {
+		super(canvas, RenderAction.Both);
 		this.center = center;
 		this.text = text;
 		this.align = align;
@@ -335,22 +316,30 @@ export class Img extends CnvElement { //todo
 	center: Coord;
 	src: string;
 	size: Size;
+	img: HTMLImageElement;
 	constructor(canvas: Canvas, center: Coord, src: string, size: Size) {
-		super(canvas);
+		super(canvas, RenderAction.None);
 		this.center = center;
 		this.src = src;
 		this.size = size;
+		let tmpImage = new Image()
+		tmpImage.src = this.src;
+		console.log(tmpImage);
+		
+		tmpImage.onload = () => {
+			this.img = tmpImage;
+			console.log('asd');
+		}
 	}
 	render() {
-		
+		this.canvas.ctx.drawImage(this.img, this.center.x, this.center.y, this.size.width, this.size.height)
 	}
 }
 export class Line extends CnvElement { //todo
 	center: Coord;
 	point: Coord[];
-
 	constructor(canvas: Canvas, point1: Coord, point2: Coord) {
-		super(canvas);
+		super(canvas, RenderAction.Stroke);
 		this.point = [point1, point2];
 		this.center
 	}
@@ -364,37 +353,10 @@ export class Line extends CnvElement { //todo
 		this.canvas.ctx.stroke();
 	}
 }
-export class Path extends CnvElement { //todo
-	corners: Coord[];
-	lines: Line[];
-	closed: boolean;
-	constructor(canvas: Canvas, action: RenderAction, center: Coord, ...corners: Coord[]) {
-		super(canvas);
-		this.center = center;
-		this.corners = corners;
-	}
-	set center(coord: Coord) {
-		
-	}
-	get nCorners() { return this.corners.length }
-	get size() { return 'Todo' }
-	get perimeter() { return 'Todo' }
-	get area() { return 'Todo' }
-	close() {
-
-	}
-	render() {
-		this.canvas.ctx.beginPath();
-		for(const corner in this.corners) {
-
-		}
-		this.canvas.ctx.stroke();
-	}
-}
 export class Triangle extends CnvElement { //todo
 	corners: Coord[];
 	constructor(canvas: Canvas, action: RenderAction) {
-		super(canvas);
+		super(canvas, action);
 	}
 	set center(coord: Coord) {
 		
@@ -413,7 +375,7 @@ export class Rect extends CnvElement { //todo
 	size: Size;
 	
 	constructor(canvas: Canvas, action: RenderAction, center: Coord, size: Size) {
-		super(canvas);
+		super(canvas, action);
 		this.center = center; 
 		this.size = size; 
 	}
@@ -430,7 +392,7 @@ export class Arc extends CnvElement { //todo
 	end: Angle;
 	rotation: Rotation;
 	constructor(canvas: Canvas, action: RenderAction, center: Coord, radius: number, start: Angle = new Angle(0), end: Angle = new Angle(0), rotation: Rotation = Rotation.Clockwise) {
-		super(canvas);
+		super(canvas, action);
 		this.center = center;
 		this.radius = radius;
 		this.start = start; 
@@ -447,7 +409,7 @@ export class Canvas {
 	//#region Definition
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
-	canvasMode: CanvasMode;
+	readonly canvasMode: CanvasMode;
 	
 	private _identity: number;
 	private _item: Record<number, CnvElement>[];
@@ -504,41 +466,23 @@ export class Canvas {
 	clean() {
 		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
 	}
-	rotate(angle: Angle = new Angle(0)) {
-		this.ctx.rotate(angle.radians)
+	rotate(angle = new Angle(0), rotationCenter = new Coord(0, 0)) {
+		this.ctx.translate(rotationCenter.x, rotationCenter.y);
+		this.ctx.rotate(angle.radians);
+		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}
 	action(drawAction: RenderAction, style: RenderStyle) {
+		this.ctx.save();
+		this.ctx.lineWidth = coalesce(style.lineWidth, this.ctx.lineWidth);
+		this.ctx.strokeStyle = coalesce(style.stroke, this.ctx.strokeStyle);
+		this.ctx.fillStyle = coalesce(style.fill, this.ctx.fillStyle);
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Fill) {
 			this.ctx.fill();
 		}
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Stroke) {
 			this.ctx.stroke();
 		}
-	}
-	writeText(text: string, coord: Coord) { //todo
-		this.ctx.fillText(text, coord.x - 10, coord.y)
-	}
-	setColor(color: string, drawAction: RenderAction) {
-		if (drawAction == RenderAction.Both || drawAction == RenderAction.Fill) {
-			this.ctx.fillStyle = color;
-		}
-		if (drawAction == RenderAction.Both || drawAction == RenderAction.Stroke) {
-			this.ctx.strokeStyle = color;
-		}
-	}
-	printImage(img: HTMLImageElement, w: number, h: number, coord: Coord = sumCoordValues(this.center, -w / 2, -h / 2), rotation?: Angle, callback: Function = () => { }) {
-		img.onload = () => {
-			if (rotation !== undefined) {
-			this.ctx.save()
-			this.rotate(rotation)
-			this.ctx.drawImage(img, coord.x, coord.y, w, h)
-			this.ctx.restore()
-			}
-			else {
-			this.ctx.drawImage(img, coord.x, coord.y, w, h)
-			}
-			callback();
-		}
+		this.ctx.restore();
 	}
 	//#endregion
 
@@ -559,14 +503,14 @@ export class Canvas {
 		if (testunit > 0 && testunit < this.cnv.width && sampleUnits.indexOf(testunit) == -1) {
 			sampleUnits.push(testunit);
 			sampleUnits.sort(function (a, b) {
-			return a - b;
+				return a - b;
 			});
 		}
 		let coord = new Coord(this.center.x - 500, this.center.y - (20 * sampleUnits.length / 2));
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			this.writeText(unit.toString(), sumCoordValues(coord, -30, +3))
+			new Text(this, sumCoordValues(coord, -30, +3), unit.toString(), 'center').render()
 			new Line(this, coord, sumCoordValues(coord, unit, 0)).render();
 			sumCoordValues(coord, 0, 20);
 		});
@@ -574,20 +518,20 @@ export class Canvas {
 	drawSampleMetric(clean = false, scale: number = 50) {
 		if(clean) this.clean()
 		this.ctx.lineWidth = 1;
-		this.ctx.textAlign = "left";
-		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical
+		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			new Line(this, new Coord(x, 0), new Coord(x, this.cnv.height)).render()
-			this.writeText(x.toString(), new Coord(x, 10))
+			new Text(this, new Coord(x-5, 10), x.toString(), 'right').render()
 		}
-		this.ctx.textAlign = "left";
-		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal
+		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			new Line(this, new Coord(0, y), new Coord(this.cnv.width, y)).render()
-			this.writeText(y.toString(), new Coord(35, y - 5))
+			new Text(this, new Coord(5, y-5), y.toString(), 'left').render()
 		}
-		new Arc(this, RenderAction.Both, this.center, 5)
+		new Arc(this, RenderAction.Both, this.center, 5).render();
 	}
 	//#endregion
 }
+//#endregion
+
 //#region Functions
 export function sumCoords(coord1: Coord, coord2: Coord) {
 	return new Coord(coord1.x + coord2.x, coord1.y + coord2.y);
@@ -606,5 +550,8 @@ export function rgbObj(red: number | string, green: number | string, blue: numbe
 }
 export function decToHex(dec: number) {
 	return ('0'+ dec.toString(16).toUpperCase()).slice(-2);
+}
+export function hexToDec(hex: string) {
+	return clamp(parseInt(hex, 16), 0, 255);
 }
 //#endregion

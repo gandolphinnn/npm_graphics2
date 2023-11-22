@@ -3,7 +3,7 @@ import { } from '@gandolphinnn/utils';
 
 const img = document.createElement("img");
 img.src = ''
-let c1 = new g.Canvas(g.CanvasMode.FullScreen);
+let c1 = new g.MainCanvas(g.CanvasMode.FullScreen);
 c1.cnv.style.zIndex = '0';
 c1.cnv.style.backgroundColor = new g.Color(g.BaseColor.Grey).hex;
 c1.rotate(new g.Angle(45), c1.center)

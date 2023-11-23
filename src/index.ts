@@ -1,4 +1,4 @@
-import { Monad, Step, isNull, areNull, overflow, clamp, coalesce, Singleton } from '@gandolphinnn/utils';
+import { isNull, overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
 
 //#region Enums, Types, Interfaces and Constants
 export enum RenderAction {
@@ -28,11 +28,11 @@ export type RenderStyle = {
 	lineWidth?: number,
 	stroke?: Color,
 	fill?: Color
-}
+} | null
 export type TextStyle = {
 	align?: CanvasTextAlign;
 	font?: string;
-}
+} | null
 export type Size = {
 	width: number,
 	height: number
@@ -282,11 +282,18 @@ export class Mesh implements Component {
 	}
 }
 export abstract class CnvElement { //todo
-	canvas: MainCanvas
-	center: Coord;
+	ctx: CanvasRenderingContext2D;
 	zIndex: number;
-	constructor() {
-		this.canvas = MainCanvas.instance;
+	protected _action: RenderAction;
+	get action() { return this._action }
+	set action(action: RenderAction) { this._action = action }
+	protected _center: Coord;
+	get center() { return this._center }
+	set center(center: Coord) { this._center = center }
+	constructor(action: RenderAction, center: Coord) {
+		this._action = action;
+		this._center = center;
+		this.ctx = MainCanvas.get.ctx;
 	}
 	abstract render(): void;
 }
@@ -294,111 +301,102 @@ export class Text extends CnvElement { //todo
 	content: string;
 	style: TextStyle;
 	constructor(center: Coord, content: string, style: TextStyle) {
-		super();
-		this.center = center;
+		super(RenderAction.Both, center);
 		this.content = content;
 		this.style = style;
 	}
 	render() {
-		const ctx = this.canvas.ctx;
-		ctx.save();
-		ctx.textAlign = coalesce(this.style.align, ctx.textAlign);
-		ctx.font = coalesce(this.style.font, ctx.font);
-		ctx.fillText(this.content, this.center.x, this.center.y);
-		ctx.restore();
+		MainCanvas.get.safeText(this.style, () => {
+			
+		})
+		this.ctx.fillText(this.content, this.center.x, this.center.y);
+		this.ctx.restore();
 	}
 }
 export class Img extends CnvElement { //todo
-	center: Coord;
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
+	set action(action: RenderAction) { }
 	constructor(center: Coord, src: string, size: Size) {
-		super();
-		this.center = center;
+		super(RenderAction.Both, center);
 		this.src = src;
 		this.size = size;
-		this.img = new Image()
-		this.img.src = this.src;
-		console.log(this);
-		
 	}
 	render() {
-		this.img.onload = () => {
-			this.canvas.ctx.drawImage(this.img, this.center.x, this.center.y, this.size.width, this.size.height);
-			console.log('re');
-			
-		}
 	}
 }
-export class Line extends CnvElement { //todo
-	center: Coord;
-	point: Coord[];
+export class Line extends CnvElement {
+	points: Coord[];
 	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	action: RenderAction;
-	constructor(point1: Coord, point2: Coord) {
-		super();
-		this.point = [point1, point2];
+	constructor(...points: [Coord,Coord]) {
+		super(RenderAction.Stroke, coordMiddle(...points));
+		this.points = points;
 		this.center
 	}
 	get length() {
-		return coordDistance(this.point[0], this.point[1]);
+		return coordDistance(this.points[0], this.points[1]);
+	}
+	set center(center: Coord) {
+		const diff = coordDiff(this._center, center)
+		this._center = center;
+		this.points[0] = sumCoordValues(this.points[0], diff.x, diff.y)
+		this.points[1] = sumCoordValues(this.points[1], diff.x, diff.y)
 	}
 	render() {
-		this.canvas.ctx.beginPath();
-		this.canvas.ctx.closePath();
-		this.canvas.ctx.moveTo(this.point[0].x, this.point[0].y);
-		this.canvas.ctx.lineTo(this.point[1].x, this.point[1].y);
-		this.canvas.ctx.stroke();
+		MainCanvas.get.safeRender(this.style, () => {
+			this.ctx.beginPath();
+			this.ctx.moveTo(this.points[0].x, this.points[0].y);
+			this.ctx.lineTo(this.points[1].x, this.points[1].y);
+			MainCanvas.get.action(this.action);
+		})
 	}
 }
-export class Triangle extends CnvElement { //todo
-	corners: Coord[];
+export class Triangle extends CnvElement {
+	points: [Coord, Coord, Coord]
 	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	action: RenderAction;
-	constructor(action: RenderAction, p1: Coord, p2: Coord, p3: Coord) {
-		super();
-		this.action = action;
-
+	constructor(action: RenderAction, points: [Coord, Coord, Coord], style?: RenderStyle) {
+		super(action, coordMiddle(...points));
+		this.points = points;
+		this.style = style;
 	}
-	get size() { return 'Todo' }
+	get size() { return {width: coordDiff(...this.points).x, height: coordDiff(...this.points).y} as Size; }
 	get perimeter() { return 'Todo' }
 	get area() { return 'Todo' }
 	render() {
-		this.canvas.ctx.beginPath();
-		
-		this.canvas.ctx.stroke();
+		MainCanvas.get.safeRender(this.style, () => {
+			this.ctx.beginPath();
+			MainCanvas.get.action(this.action);
+		})
 	}
 }
-export class Rect extends CnvElement{ //todo
-	action: RenderAction;
+export class Rect extends CnvElement{
 	size: Size;
 	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	constructor(action: RenderAction, center: Coord, size: Size) {
-		super();
-		this.action = action;
-		this.center = center; 
-		this.size = size; 
+	constructor(action: RenderAction, center: Coord, size: Size, style?: RenderStyle) {
+		super(action, center);
+		this.size = size;
+		this.style = style;
 	}
 	get perimeter() { return (this.size.height + this.size.width) * 2 }
 	get area() { return this.size.height * this.size.width }
 	render() {
-		this.canvas.ctx.rect(this.center.x, this.center.y, this.size.width, this.size.height);
+		MainCanvas.get.safeRender(this.style, () => {
+			this.ctx.rect(this.center.x, this.center.y, this.size.width, this.size.height);
+			MainCanvas.get.action(this.action);
+		})
 	}
 }
-export class Arc extends CnvElement { //todo
-	action: RenderAction;
+export class Arc extends CnvElement {
 	radius: number;
+	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
 	start: Angle;
 	end: Angle;
 	rotation: Rotation;
-	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
 	constructor(action: RenderAction, center: Coord, radius: number, style: RenderStyle, start: Angle = new Angle(0), end: Angle = new Angle(0), rotation: Rotation = Rotation.Clockwise) {
-		super();
-		this.action = action;
-		this.center = center;
-		this.style = style;
+		super(action, center);
 		this.radius = radius;
+		this.style = style;
 		this.start = start; 
 		this.end = end; 
 		this.rotation = rotation; 
@@ -406,27 +404,22 @@ export class Arc extends CnvElement { //todo
 	get diameter() { return this.radius * 2 };
 	set diameter(diameter: number) { this.radius = diameter / 2 };
 	render() {
-		this.canvas.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotation == Rotation.CounterClockwise)
-		this.canvas.action(this.action, this.style);
+		MainCanvas.get.safeRender(this.style, () => {
+			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotation == Rotation.CounterClockwise);
+			MainCanvas.get.action(this.action);
+		})
 	}
 }
 export class MainCanvas extends Singleton {
+	static get get() { return this.singletonInstance as MainCanvas }
 	//#region Definition
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
-	
-	private _instance: MainCanvas;
+
 	private _identity: number;
-	private _item: Record<number, CnvElement>[];
-	private _index: Record<number, number>[];
+	private _items: Record<number, Mesh>[];
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
-	static get instance() {
-		if (this._instance == null) {
-			this._instance = new Singleton()
-		}
-		return this._instance;
-	}
 	private constructor() {
 		super();
 		//* Get the body
@@ -458,24 +451,34 @@ export class MainCanvas extends Singleton {
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}
-	action(drawAction: RenderAction, style: RenderStyle) {
+	safeRender(style: RenderStyle, renderCallBack: Function) {
 		this.ctx.save();
 		this.ctx.lineWidth = coalesce(style.lineWidth, this.ctx.lineWidth);
 		this.ctx.strokeStyle = coalesce(style.stroke, this.ctx.strokeStyle);
 		this.ctx.fillStyle = coalesce(style.fill, this.ctx.fillStyle);
+		renderCallBack();
+		this.ctx.restore();
+	}
+	safeText(style: TextStyle, renderCallBack: Function) {
+		this.ctx.save();
+		this.ctx.textAlign = coalesce(style.align, this.ctx.textAlign);
+		this.ctx.font = coalesce(style.font, this.ctx.font);
+		renderCallBack();
+		this.ctx.restore();
+	}
+	action(drawAction: RenderAction, ) {
+		
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Fill) {
 			this.ctx.fill();
 		}
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Stroke) {
 			this.ctx.stroke();
 		}
-		this.ctx.restore();
 	}
 	//#endregion
 
 	//#region Draw
 	addElement(element: CnvElement, zIndex = 0) {
-		let newIdentity = this._identity++;
 		//todo add to both lists of record, the kv
 	}
 	getElement() {
@@ -497,8 +500,8 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(this, sumCoordValues(coord, -30, +3), unit.toString(), 'center').render()
-			new Line(this, coord, sumCoordValues(coord, unit, 0)).render();
+			new Text(sumCoordValues(coord, -30, +3), unit.toString(), {align: 'center'}).render()
+			new Line(coord, sumCoordValues(coord, unit, 0)).render();
 			sumCoordValues(coord, 0, 20);
 		});
 	}
@@ -506,29 +509,42 @@ export class MainCanvas extends Singleton {
 		if(clean) this.clean()
 		this.ctx.lineWidth = 1;
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
-			new Line(this, new Coord(x, 0), new Coord(x, this.cnv.height)).render()
-			new Text(this, new Coord(x-5, 10), x.toString(), 'right').render()
+			new Line(new Coord(x, 0), new Coord(x, this.cnv.height)).render()
+			new Text(new Coord(x-5, 10), x.toString(), {align: 'right'}).render()
 		}
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
-			new Line(this, new Coord(0, y), new Coord(this.cnv.width, y)).render()
-			new Text(this, new Coord(5, y-5), y.toString(), {align: 'left'}).render()
+			new Line(new Coord(0, y), new Coord(this.cnv.width, y)).render()
+			new Text(new Coord(5, y-5), y.toString(), {align: 'left'}).render()
 		}
-		new Arc(this, RenderAction.Both, this.center, 5, {}).render();
+		new Arc(RenderAction.Both, this.center, 5, {}).render();
 	}
 	//#endregion
 }
 //#endregion
 
 //#region Functions
-export function sumCoords(coord1: Coord, coord2: Coord) {
-	return new Coord(coord1.x + coord2.x, coord1.y + coord2.y);
+export function sumCoords(...coords: Coord[]) {
+	return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.x + curr.y), new Coord(0, 0));
 }
 export function sumCoordValues(coord1: Coord, x: number, y: number) {
 	return new Coord(coord1.x + x, coord1.y + y);
 }
+export function coordMiddle(...coords: Coord[]) {
+	return new Coord(sumCoords(...coords).x/coords.length, sumCoords(...coords).y/coords.length);
+}
+export function coordDiff(...coords: Coord[]) {
+	const pivoted = arrPivot(coords);	
+	const cMax = new Coord(Math.max(...pivoted.x), Math.max(...pivoted.y));
+	const cMin = new Coord(Math.min(...pivoted.x), Math.min(...pivoted.y));
+	return {x: Math.abs(cMax.x - cMin.x), y: Math.abs(cMax.y - cMin.y)}
+}
 export function coordDistance(coord1: Coord, coord2: Coord) {
 	return Math.sqrt(((coord1.x - coord2.x) ** 2) + ((coord1.y - coord2.y) ** 2));
 }
+
+
+
+
 export function baseColorHex(colorName: BaseColor) {
 	return BASECOLOR_DEC[colorName];
 }

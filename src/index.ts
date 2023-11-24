@@ -24,15 +24,21 @@ export enum BaseColor {
 	RebeccaPurple, Red, RosyBrown, RoyalBlue, SaddleBrown, Salmon, SandyBrown, SeaGreen, SeaShell, Sienna, Silver, SkyBlue, SlateBlue, SlateGrey, Snow, SpringGreen, SteelBlue,
 	Tan, Teal, Thistle, Tomato, Turquoise, Violet, Wheat, White, WhiteSmoke, Yellow, YellowGreen
 }
-export type RenderStyle = {
+export type DrawStyle = {
 	lineWidth?: number,
-	stroke?: Color,
-	fill?: Color
-} | null
+	strokeStyle?: Color,
+	fillStyle?: Color
+}
 export type TextStyle = {
-	align?: CanvasTextAlign;
+	/**
+	 * @example "left" means the center is just to the left of the text
+	 */
+	textAlign?: CanvasTextAlign;
+	/**
+	 * @example "10px Arial"
+	 */
 	font?: string;
-} | null
+}
 export type Size = {
 	width: number,
 	height: number
@@ -186,6 +192,9 @@ export const BASECOLOR_DEC: Record<BaseColor, RGB> = {
 	[BaseColor.Yellow]: {red: 255, green: 255, blue: 0},
 	[BaseColor.YellowGreen]: {red: 154, green: 205, blue: 50}
 }
+export const RGBA_PATTERN: RegExp = /rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([01](?:\.\d+)?)\))?/
+export const IMG_ZINDEX_DEFAULT = 100;
+export const DRAWPOINTS_RADIUS = 3;
 //#endregion
 
 //#region Classes
@@ -197,20 +206,20 @@ export class Color {
 	get hex() { return `#${decToHex(this.red)}${decToHex(this.green)}${decToHex(this.blue)}` }
 	get rgb() { return `rgb(${this.red},${this.green},${this.blue})` }
 	get rgba() { return `rgba(${this.red},${this.green},${this.blue},${this.alpha})` }
-	constructor(baseColor: BaseColor, rgb?: RGB, alpha?: number) {
+	constructor(baseColor?: BaseColor, rgb?: RGB, alpha?: number) {
 		this.set(baseColor, rgb, alpha);
 	}
 	set(baseColor?: BaseColor, rgb?: RGB, alpha: number = 1) {
 		if (isNull(baseColor)) {
 			if (typeof rgb.red === 'string') rgb.red = hexToDec(rgb.red);
-			this.red = rgb.red;
+			this.red = clamp(rgb.red, 0, 255);
 			if (typeof rgb.green === 'string') rgb.green = hexToDec(rgb.green);
-			this.green = rgb.green;
+			this.green = clamp(rgb.green, 0, 255);
 			if (typeof rgb.blue === 'string') rgb.blue = hexToDec(rgb.blue);
-			this.blue = rgb.blue;
+			this.blue = clamp(rgb.blue, 0, 255);
 		}
-		else {
-			let obj = baseColorHex(baseColor) as {red: number, green: number, blue: number}
+		else if (isNull(rgb)) {
+			let obj = baseColorToDec(baseColor) as {red: number, green: number, blue: number}
 			this.red = obj.red;
 			this.green = obj.green;
 			this.blue = obj.blue;
@@ -221,7 +230,6 @@ export class Color {
 export class Coord {
 	x: number;
 	y: number;
-
 	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;
@@ -251,7 +259,7 @@ export class Angle {
 		else { throw new Error('Invalid angle type'); }
 	}
 	private normalize() {
-		this._degrees = overflow(this._degrees, 0, 359) //? Set degr to a 0 -> 359 range
+		this._degrees = overflow(this._degrees, 0, 360) //? Set degr to a 0 -> 360 range
 		this._radians = this._degrees * Math.PI / 180; //? Convert to radians
 	}
 	//#region Trigonometric functions
@@ -269,131 +277,177 @@ export class Angle {
 	get atanh() { return Math.atanh(this._radians); }
 	//#endregion
 }
-export class Mesh implements Component {
+export class Mesh implements Component { //todo
 	items: CnvElement[];
 	zIndex: number;
 	private readonly _center: Coord;
-	set center(coord: Coord) { } //todo
+	set center(coord: Coord) { }
 	get center() { return this._center; }
 	render() {
 		this.items.forEach(item => {
-			item.render();
+			item.render(false);
 		});
 	}
 }
-export abstract class CnvElement { //todo
+export abstract class CnvElement {
 	ctx: CanvasRenderingContext2D;
 	zIndex: number;
-	protected _action: RenderAction;
-	get action() { return this._action }
-	set action(action: RenderAction) { this._action = action }
+
 	protected _center: Coord;
 	get center() { return this._center }
 	set center(center: Coord) { this._center = center }
-	constructor(action: RenderAction, center: Coord) {
-		this._action = action;
+
+	constructor(center: Coord, zIndex = 0) {
 		this._center = center;
 		this.ctx = MainCanvas.get.ctx;
+		this.zIndex = zIndex;
 	}
-	abstract render(): void;
+	abstract render(drawPoints: boolean): void;
+	protected drawPoints(points: Coord[] = []) {
+		[this.center, ...points].forEach(point => {
+			MainCanvas.get.safeDraw({strokeStyle: new Color(BaseColor.Black), fillStyle: new Color(BaseColor.Black)}, () => {
+				new Arc(RenderAction.Both, point, DRAWPOINTS_RADIUS, null).render();
+			});
+		});
+	}
 }
-export class Text extends CnvElement { //todo
+export class Text extends CnvElement {
 	content: string;
-	style: TextStyle;
-	constructor(center: Coord, content: string, style: TextStyle) {
-		super(RenderAction.Both, center);
+	private _style: TextStyle;
+	get style() { return this._style }
+	set style(style: TextStyle | null) { this._style = coalesce(style, {align: null, font: null}) }
+
+	constructor(center: Coord, content: string, style?: TextStyle) {
+		super(center);
 		this.content = content;
 		this.style = style;
 	}
-	render() {
-		MainCanvas.get.safeText(this.style, () => {
-			
-		})
+	render(drawPoints = false) {
+		this.ctx.save();
+		this.ctx.textAlign = coalesce(this.style.textAlign, this.ctx.textAlign);
+		this.ctx.font = coalesce(this.style.font, this.ctx.font);
 		this.ctx.fillText(this.content, this.center.x, this.center.y);
+		drawPoints? this.drawPoints() : null;
 		this.ctx.restore();
 	}
 }
-export class Img extends CnvElement { //todo
+export class Img extends CnvElement {
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
-	set action(action: RenderAction) { }
+
 	constructor(center: Coord, src: string, size: Size) {
-		super(RenderAction.Both, center);
+		super(center, IMG_ZINDEX_DEFAULT);
 		this.src = src;
 		this.size = size;
 	}
-	render() {
+	render(drawPoints = false) {
+		//todo
+		//drawPoints? this.drawPoints() : null;
 	}
 }
-export class Line extends CnvElement {
+export abstract class CnvDrawing extends CnvElement {
+	action: RenderAction;
+
+	private _style: DrawStyle;
+	get style() { return this._style }
+	set style(style: DrawStyle | null) { this._style = coalesce(style, {lineWidth: null, stroke: null, fill: null}) }
+
+	constructor(action: RenderAction, center: Coord, zIndex = 0) {
+		super(center, zIndex);
+		this.action = action;
+	}
+}
+export class Line extends CnvDrawing {
 	points: Coord[];
-	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	constructor(...points: [Coord,Coord]) {
-		super(RenderAction.Stroke, coordMiddle(...points));
-		this.points = points;
-		this.center
+
+	constructor(point0: Coord, point1: Coord, style?: DrawStyle) {
+		super(RenderAction.Stroke, coordsMiddle(point0, point1));
+		this.points = [point0, point1];
+		this.style = style;
 	}
 	get length() {
 		return coordDistance(this.points[0], this.points[1]);
 	}
+	get center() { return coordsMiddle(...this.points)}
 	set center(center: Coord) {
-		const diff = coordDiff(this._center, center)
+		const diff = coordsSize(this.center, center)
 		this._center = center;
-		this.points[0] = sumCoordValues(this.points[0], diff.x, diff.y)
-		this.points[1] = sumCoordValues(this.points[1], diff.x, diff.y)
+		this.points[0] = coordValuesSum(this.points[0], diff.width, diff.height)
+		this.points[1] = coordValuesSum(this.points[1], diff.width, diff.height)
 	}
-	render() {
-		MainCanvas.get.safeRender(this.style, () => {
-			this.ctx.beginPath();
+	render(drawPoints = false) {
+		MainCanvas.get.safeDraw(this.style, () => {
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			MainCanvas.get.action(this.action);
-		})
+			drawPoints? this.drawPoints(this.points) : null;
+		});
 	}
 }
-export class Triangle extends CnvElement {
-	points: [Coord, Coord, Coord]
-	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	constructor(action: RenderAction, points: [Coord, Coord, Coord], style?: RenderStyle) {
-		super(action, coordMiddle(...points));
+export class Triangle extends CnvDrawing {
+	points: [Coord, Coord, Coord];
+
+	get size() { return coordsSize(...this.points) }
+	get perimeter() { return coordDistance(this.points[0], this.points[1]) + coordDistance(this.points[1], this.points[2]) + coordDistance(this.points[2], this.points[0]) }
+	get area() { return 'Todo, maybe impossible' }
+
+	constructor(action: RenderAction, points: [Coord, Coord, Coord], style?: DrawStyle) {
+		super(action, coordsMiddle(...points));
 		this.points = points;
 		this.style = style;
 	}
-	get size() { return {width: coordDiff(...this.points).x, height: coordDiff(...this.points).y} as Size; }
-	get perimeter() { return 'Todo' }
-	get area() { return 'Todo' }
-	render() {
-		MainCanvas.get.safeRender(this.style, () => {
-			this.ctx.beginPath();
+	render(drawPoints = false) {
+		console.log(this);
+		
+		MainCanvas.get.safeDraw(this.style, () => {
+			this.ctx.moveTo(this.points[0].x, this.points[0].y);
+			this.ctx.lineTo(this.points[1].x, this.points[1].y);
+			this.ctx.lineTo(this.points[2].x, this.points[2].y);
+			this.ctx.closePath();
 			MainCanvas.get.action(this.action);
-		})
+			drawPoints? this.drawPoints(this.points) : null;
+		});
 	}
 }
-export class Rect extends CnvElement{
+export class Rect extends CnvDrawing {
 	size: Size;
-	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
-	constructor(action: RenderAction, center: Coord, size: Size, style?: RenderStyle) {
+	get points() {
+		const deltaX = this.size.width/2;
+		const deltaY = this.size.height/2;
+		return [
+			coordValuesSum(this.center, -deltaX, -deltaY),
+			coordValuesSum(this.center, deltaX, -deltaY),
+			coordValuesSum(this.center, deltaX, deltaY),
+			coordValuesSum(this.center, -deltaX, deltaY),
+		];
+	}
+	get perimeter() { return (this.size.height + this.size.width) * 2 }
+	get area() { return this.size.height * this.size.width }
+
+	constructor(action: RenderAction, center: Coord, size: Size, style?: DrawStyle) {
 		super(action, center);
 		this.size = size;
 		this.style = style;
 	}
-	get perimeter() { return (this.size.height + this.size.width) * 2 }
-	get area() { return this.size.height * this.size.width }
-	render() {
-		MainCanvas.get.safeRender(this.style, () => {
-			this.ctx.rect(this.center.x, this.center.y, this.size.width, this.size.height);
+	render(drawPoints = false) {
+		MainCanvas.get.safeDraw(this.style, () => {
+			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
 			MainCanvas.get.action(this.action);
-		})
+			drawPoints? this.drawPoints(this.points) : null;
+		});
 	}
 }
-export class Arc extends CnvElement {
+export class Arc extends CnvDrawing {
 	radius: number;
-	style: RenderStyle = {lineWidth: null, stroke: null, fill: null}
 	start: Angle;
 	end: Angle;
 	rotation: Rotation;
-	constructor(action: RenderAction, center: Coord, radius: number, style: RenderStyle, start: Angle = new Angle(0), end: Angle = new Angle(0), rotation: Rotation = Rotation.Clockwise) {
+
+	get diameter() { return this.radius * 2 }
+	set diameter(diameter: number) { this.radius = diameter / 2 }
+
+	constructor(action: RenderAction, center: Coord, radius: number, style?: DrawStyle, start: Angle = new Angle(0), end: Angle = new Angle(360), rotation: Rotation = Rotation.Clockwise) {
 		super(action, center);
 		this.radius = radius;
 		this.style = style;
@@ -401,13 +455,12 @@ export class Arc extends CnvElement {
 		this.end = end; 
 		this.rotation = rotation; 
 	}
-	get diameter() { return this.radius * 2 };
-	set diameter(diameter: number) { this.radius = diameter / 2 };
-	render() {
-		MainCanvas.get.safeRender(this.style, () => {
+	render(drawPoints = false) {
+		MainCanvas.get.safeDraw(this.style, () => {
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotation == Rotation.CounterClockwise);
 			MainCanvas.get.action(this.action);
-		})
+			drawPoints? this.drawPoints() : null;
+		});
 	}
 }
 export class MainCanvas extends Singleton {
@@ -416,10 +469,33 @@ export class MainCanvas extends Singleton {
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
 
-	private _identity: number;
-	private _items: Record<number, Mesh>[];
+	//todo private _items: Record<number, Mesh>[];
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
+
+	get color() {
+		const rgba = rgbaParse(this.cnv.style.backgroundColor);
+		return new Color(null, rgba.rgb, rgba.a);
+	}
+	set color(color: Color) { this.cnv.style.backgroundColor = color.rgba }
+
+	//get drawStyle() { return {lineWidth: this.ctx.lineWidth, strokeStyle: new Color(null, this.ctx.strokeStyle), fillStyle: this.ctx.fillStyle} as DrawStyle }
+	set drawStyle(drawStyle: DrawStyle) {
+		this.ctx.lineWidth = coalesce(drawStyle.lineWidth, this.ctx.lineWidth);
+		this.ctx.strokeStyle = coalesce(drawStyle.strokeStyle?.rgba, this.ctx.strokeStyle);
+		this.ctx.fillStyle = coalesce(drawStyle.fillStyle?.rgba, this.ctx.fillStyle);
+		// console.log(isNull(drawStyle.fillStyle));
+		
+		// console.log(drawStyle);
+		// console.log(this.ctx);
+	}
+
+	get textStyle() { return {textAlign: this.ctx.textAlign, font: this.ctx.font} as TextStyle}
+	set textStyle(textStyle: TextStyle) {
+		this.ctx.textAlign = coalesce(textStyle.textAlign, this.ctx.textAlign);
+		this.ctx.font = coalesce(textStyle.font, this.ctx.font);
+	}
+
 	private constructor() {
 		super();
 		//* Get the body
@@ -429,12 +505,12 @@ export class MainCanvas extends Singleton {
 		const body = document.querySelector('body')!;
 
 		//* Create the canvas
-		this.cnv = document.createElement("canvas");
+		this.cnv = document.createElement('canvas');
 		this.cnv.width = window.innerWidth;
 		this.cnv.height = window.innerHeight;
 		body.style.overflow = 'hidden';
 		body.style.margin = '0px';
-		console.log(`Main canvas set`)
+		console.log('Main canvas set')
 
 		body.appendChild(this.cnv)
 		this.ctx = this.cnv.getContext('2d')!;
@@ -451,28 +527,22 @@ export class MainCanvas extends Singleton {
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}
-	safeRender(style: RenderStyle, renderCallBack: Function) {
+	safeDraw(drawStyle: DrawStyle, renderCallBack: Function) {
 		this.ctx.save();
-		this.ctx.lineWidth = coalesce(style.lineWidth, this.ctx.lineWidth);
-		this.ctx.strokeStyle = coalesce(style.stroke, this.ctx.strokeStyle);
-		this.ctx.fillStyle = coalesce(style.fill, this.ctx.fillStyle);
+		this.drawStyle = drawStyle;
+		this.ctx.beginPath();
 		renderCallBack();
 		this.ctx.restore();
 	}
-	safeText(style: TextStyle, renderCallBack: Function) {
-		this.ctx.save();
-		this.ctx.textAlign = coalesce(style.align, this.ctx.textAlign);
-		this.ctx.font = coalesce(style.font, this.ctx.font);
-		renderCallBack();
-		this.ctx.restore();
-	}
-	action(drawAction: RenderAction, ) {
-		
+	action(drawAction: RenderAction) {
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Fill) {
 			this.ctx.fill();
 		}
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Stroke) {
 			this.ctx.stroke();
+		}
+		if (drawAction == RenderAction.None) {
+			this.ctx.closePath();
 		}
 	}
 	//#endregion
@@ -500,56 +570,65 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(sumCoordValues(coord, -30, +3), unit.toString(), {align: 'center'}).render()
-			new Line(coord, sumCoordValues(coord, unit, 0)).render();
-			sumCoordValues(coord, 0, 20);
+			new Text(coordValuesSum(coord, -30, +3), unit.toString(), {textAlign: 'center'}).render()
+			new Line(coord, coordValuesSum(coord, unit, 0)).render();
+			coordValuesSum(coord, 0, 20);
 		});
 	}
 	drawSampleMetric(clean = false, scale: number = 50) {
+		scale = clamp(scale, 25, Infinity);
 		if(clean) this.clean()
 		this.ctx.lineWidth = 1;
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			new Line(new Coord(x, 0), new Coord(x, this.cnv.height)).render()
-			new Text(new Coord(x-5, 10), x.toString(), {align: 'right'}).render()
+			new Text(new Coord(x-5, 10), x.toString(), {textAlign: 'right'}).render()
 		}
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			new Line(new Coord(0, y), new Coord(this.cnv.width, y)).render()
-			new Text(new Coord(5, y-5), y.toString(), {align: 'left'}).render()
+			new Text(new Coord(5, y-5), y.toString(), {textAlign: 'left'}).render()
 		}
-		new Arc(RenderAction.Both, this.center, 5, {}).render();
+		new Arc(RenderAction.Both, this.center, 5).render();
 	}
 	//#endregion
 }
 //#endregion
 
-//#region Functions
-export function sumCoords(...coords: Coord[]) {
-	return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.x + curr.y), new Coord(0, 0));
+//#region Coords functions
+//? sum every coordinate
+export function coordsSum(...coords: Coord[]) {
+	return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), new Coord(0, 0));
 }
-export function sumCoordValues(coord1: Coord, x: number, y: number) {
+//? sum x/y to a coordinate
+export function coordValuesSum(coord1: Coord, x: number, y: number) {
 	return new Coord(coord1.x + x, coord1.y + y);
 }
-export function coordMiddle(...coords: Coord[]) {
-	return new Coord(sumCoords(...coords).x/coords.length, sumCoords(...coords).y/coords.length);
+//? get the center of multiple points
+export function coordsMiddle(...coords: Coord[]) {
+	return new Coord(coordsSum(...coords).x/coords.length, coordsSum(...coords).y/coords.length);
 }
-export function coordDiff(...coords: Coord[]) {
+//? x/y difference between multiple points
+export function coordsSize(...coords: Coord[]) {
 	const pivoted = arrPivot(coords);	
 	const cMax = new Coord(Math.max(...pivoted.x), Math.max(...pivoted.y));
 	const cMin = new Coord(Math.min(...pivoted.x), Math.min(...pivoted.y));
-	return {x: Math.abs(cMax.x - cMin.x), y: Math.abs(cMax.y - cMin.y)}
+	return {width: Math.abs(cMax.x - cMin.x), height: Math.abs(cMax.y - cMin.y)} as Size;
 }
+//? diagonal distance between 2 points
 export function coordDistance(coord1: Coord, coord2: Coord) {
 	return Math.sqrt(((coord1.x - coord2.x) ** 2) + ((coord1.y - coord2.y) ** 2));
 }
+//#endregion
 
-
-
-
-export function baseColorHex(colorName: BaseColor) {
+//#region Others
+export function baseColorToDec(colorName: BaseColor) {
 	return BASECOLOR_DEC[colorName];
 }
 export function rgbObj(red: number | string, green: number | string, blue: number | string): RGB {
-	return {red: red, green: green, blue: blue}
+	return {red: red, green: green, blue: blue};
+}
+export function rgbaParse(rgbaStr: string): {rgb: RGB, a: number} {
+	const [_, red, green, blue, alpha] = rgbaStr.match(RGBA_PATTERN).map(parseFloat);
+	return {rgb: {red: red, green: green, blue: blue}, a: coalesce(alpha, 1)};
 }
 export function decToHex(dec: number) {
 	return ('0'+ dec.toString(16).toUpperCase()).slice(-2);

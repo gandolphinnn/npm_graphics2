@@ -2,22 +2,18 @@ import * as g from './index.js';
 import { } from '@gandolphinnn/utils';
 
 const c1 = g.MainCanvas.get;
-const ctx1 = c1.ctx;
-console.log(ctx1.font)
-c1.ctx.font = '12px arial'
-console.log(ctx1.font)
-console.log(g.coordDiff(new g.Coord(-10, 200), new g.Coord(100, 10), new g.Coord(0, 0)));
+c1.color = new g.Color(g.BaseColor.Grey);
+c1.drawSampleMetric(true, 50)
 
-/*c1.cnv.style.zIndex = '0';
-c1.cnv.style.backgroundColor = new g.Color(g.BaseColor.Grey).hex;
-c1.rotate(new g.Angle(45), c1.center)
-c1.rotate(new g.Angle(-45))
-console.log(c1);
-c1.ctx.reset();
+const style = {fillStyle: new g.Color(g.BaseColor.Red, null, .3)} as g.DrawStyle
 
-c1.drawSampleMetric(true)
-const i = new g.Img(c1.center, 'red.png', {width: 300, height: 300});
-i.render()
+new g.Text(new g.Coord(100, 100), 'TEST', {textAlign: 'right', font: '25px arial'}).render(true);
+new g.Arc(g.RenderAction.Both, new g.Coord(100, 200), 75, style).render(true);
+new g.Line(new g.Coord(200, 50), new g.Coord(450, 200)).render(true);
+new g.Triangle(g.RenderAction.Both, [new g.Coord(150, 600), new g.Coord(300, 350), new g.Coord(600, 500)], style).render(true)
+new g.Rect(g.RenderAction.Both, new g.Coord(900,300), {width: 250, height: 150}, style).render(true)
+/*const i = new g.Img(c1.center, 'red.png', {width: 300, height: 300});
+i.render()*/
 
 //setInterval(() => {i.render()}, 1000)
 /*

@@ -1,31 +1,30 @@
-import * as g from './index.js';
+import { MainCanvas, Coord, BaseColor, Color, DrawStyle, Text, Arc, RenderAction, Line, Triangle, Rect, coordValuesSum } from './index.js';
 import { } from '@gandolphinnn/utils';
 
-const c1 = g.MainCanvas.get;
-c1.color = new g.Color(g.BaseColor.Grey);
-c1.drawSampleMetric(true, 50)
+const c1 = MainCanvas.get;
+c1.color = new Color(BaseColor.Grey);
+c1.drawSampleMetric(true, 50);
 
-const style = {fillStyle: new g.Color(g.BaseColor.Red, null, .3)} as g.DrawStyle
+const style1 = {fillStyle: new Color(BaseColor.Red, null, .3)} as DrawStyle
+const style2 = {fillStyle: new Color(BaseColor.Green, null, .3)} as DrawStyle
 
-new g.Text(new g.Coord(100, 100), 'TEST', {textAlign: 'right', font: '25px arial'}).render(true);
-new g.Arc(g.RenderAction.Both, new g.Coord(100, 200), 75, style).render(true);
-new g.Line(new g.Coord(200, 50), new g.Coord(450, 200)).render(true);
-new g.Triangle(g.RenderAction.Both, [new g.Coord(150, 600), new g.Coord(300, 350), new g.Coord(600, 500)], style).render(true)
-new g.Rect(g.RenderAction.Both, new g.Coord(900,300), {width: 250, height: 150}, style).render(true)
-/*const i = new g.Img(c1.center, 'red.png', {width: 300, height: 300});
-i.render()*/
-
-//setInterval(() => {i.render()}, 1000)
-/*
-let c2 = new g.Canvas(g.CanvasMode.Window, {height: 100, width: 150}, 25, 25);
-c2.cnv.style.zIndex = '2';
-c2.cnv.style.backgroundColor = new g.Color(g.BaseColor.Aqua).hex;
-c2.drawSampleMetric()
-
-
-const l = new g.Line(new g.Coord(0, 0), new g.Coord(200, 200))
-l.render();
-l.point[0] = new g.Coord(500, 158);
-l.render();
-// l.canvas = c2;
-// l.render();*/
+const a = new Arc(RenderAction.Both, new Coord(100, 125), 75, style1).render(true);
+const te = new Text(new Coord(300, 50), 'TEST', {textAlign: 'center', font: '25px arial'}).render(true);
+const l = new Line(new Coord(200, 50), new Coord(450, 200)).render(true);
+const tr = new Triangle(RenderAction.Both, [new Coord(400, 50), new Coord(700, 100), new Coord(600, 200)], style1).render(true);
+const r = new Rect(RenderAction.Both, new Coord(900, 125), {width: 250, height: 150}, style1).render(true);
+a.center = coordValuesSum(a.center, 50, 300);
+te.center = coordValuesSum(te.center, 50, 300);
+l.center = coordValuesSum(l.center, 50, 300);
+tr.center = coordValuesSum(tr.center, 50, 300);
+r.center = coordValuesSum(r.center, 50, 300);
+a.style = style2;
+te.style = {textAlign: 'right', font: '30px Arial'};
+l.style = style2;
+tr.style = style2;
+r.style = style2;
+a.render(true)
+te.render(true)
+l.render(true)
+tr.render(true)
+r.render(true)

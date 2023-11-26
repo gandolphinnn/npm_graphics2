@@ -302,7 +302,7 @@ export abstract class CnvElement {
 		this.ctx = MainCanvas.get.ctx;
 		this.zIndex = zIndex;
 	}
-	abstract render(drawPoints: boolean): void;
+	abstract render(drawPoints: boolean): CnvElement;
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
 			MainCanvas.get.safeDraw({strokeStyle: new Color(BaseColor.Black), fillStyle: new Color(BaseColor.Black)}, () => {
@@ -329,9 +329,10 @@ export class Text extends CnvElement {
 		this.ctx.fillText(this.content, this.center.x, this.center.y);
 		drawPoints? this.drawPoints() : null;
 		this.ctx.restore();
+		return this;
 	}
 }
-export class Img extends CnvElement {
+/*export class Img extends CnvElement {
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
@@ -344,8 +345,9 @@ export class Img extends CnvElement {
 	render(drawPoints = false) {
 		//todo
 		//drawPoints? this.drawPoints() : null;
+		return this;
 	}
-}
+}*/
 export abstract class CnvDrawing extends CnvElement {
 	action: RenderAction;
 
@@ -383,6 +385,7 @@ export class Line extends CnvDrawing {
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints(this.points) : null;
 		});
+		return this;
 	}
 }
 export class Triangle extends CnvDrawing {
@@ -392,14 +395,20 @@ export class Triangle extends CnvDrawing {
 	get perimeter() { return coordDistance(this.points[0], this.points[1]) + coordDistance(this.points[1], this.points[2]) + coordDistance(this.points[2], this.points[0]) }
 	get area() { return 'Todo, maybe impossible' }
 
+	get center() { return coordsMiddle(...this.points)}
+	set center(center: Coord) {
+		const diff = coordsSize(this.center, center)
+		this._center = center;
+		this.points[0] = coordValuesSum(this.points[0], diff.width, diff.height)
+		this.points[1] = coordValuesSum(this.points[1], diff.width, diff.height)
+		this.points[2] = coordValuesSum(this.points[2], diff.width, diff.height)
+	}
 	constructor(action: RenderAction, points: [Coord, Coord, Coord], style?: DrawStyle) {
 		super(action, coordsMiddle(...points));
 		this.points = points;
 		this.style = style;
 	}
 	render(drawPoints = false) {
-		console.log(this);
-		
 		MainCanvas.get.safeDraw(this.style, () => {
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
@@ -408,6 +417,7 @@ export class Triangle extends CnvDrawing {
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints(this.points) : null;
 		});
+		return this;
 	}
 }
 export class Rect extends CnvDrawing {
@@ -436,6 +446,7 @@ export class Rect extends CnvDrawing {
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints(this.points) : null;
 		});
+		return this;
 	}
 }
 export class Arc extends CnvDrawing {
@@ -461,6 +472,7 @@ export class Arc extends CnvDrawing {
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;
 		});
+		return this;
 	}
 }
 export class MainCanvas extends Singleton {

@@ -26,8 +26,8 @@ export enum BaseColor {
 }
 export type DrawStyle = {
 	lineWidth?: number,
-	strokeStyle?: Color,
-	fillStyle?: Color
+	strokeStyle?: string | CanvasGradient | CanvasPattern,
+	fillStyle?: string | CanvasGradient | CanvasPattern
 }
 export type TextStyle = {
 	/**
@@ -249,7 +249,7 @@ export class Angle {
 		this._degrees = this._radians * 180 / Math.PI; //? First i must convert to degrees
 		this.normalize()
 	}
-	constructor(alpha: number, type: AngleType = AngleType.Degree) {
+	constructor(alpha: number = 0, type: AngleType = AngleType.Degree) {
 		if (type == AngleType.Degree) {
 			this.degrees = alpha;
 		}
@@ -292,6 +292,7 @@ export class Mesh implements Component { //todo
 export abstract class CnvElement {
 	ctx: CanvasRenderingContext2D;
 	zIndex: number;
+	rotation: Angle;
 
 	protected _center: Coord;
 	get center() { return this._center }
@@ -301,11 +302,12 @@ export abstract class CnvElement {
 		this._center = center;
 		this.ctx = MainCanvas.get.ctx;
 		this.zIndex = zIndex;
+		this.rotation = new Angle(0);
 	}
 	abstract render(drawPoints: boolean): CnvElement;
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
-			MainCanvas.get.safeDraw({strokeStyle: new Color(BaseColor.Black), fillStyle: new Color(BaseColor.Black)}, () => {
+			MainCanvas.get.safeDraw({strokeStyle: new Color(BaseColor.Black).rgba, fillStyle: new Color(BaseColor.Black).rgba}, () => {
 				new Arc(RenderAction.Both, point, DRAWPOINTS_RADIUS, null).render();
 			});
 		});
@@ -324,6 +326,7 @@ export class Text extends CnvElement {
 	}
 	render(drawPoints = false) {
 		this.ctx.save();
+		MainCanvas.get.rotate(this.rotation, this.center);
 		this.ctx.textAlign = coalesce(this.style.textAlign, this.ctx.textAlign);
 		this.ctx.font = coalesce(this.style.font, this.ctx.font);
 		this.ctx.fillText(this.content, this.center.x, this.center.y);
@@ -380,6 +383,7 @@ export class Line extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
+			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			MainCanvas.get.action(this.action);
@@ -410,6 +414,7 @@ export class Triangle extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
+			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			this.ctx.lineTo(this.points[2].x, this.points[2].y);
@@ -442,6 +447,7 @@ export class Rect extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
+			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints(this.points) : null;
@@ -453,7 +459,7 @@ export class Arc extends CnvDrawing {
 	radius: number;
 	start: Angle;
 	end: Angle;
-	rotation: Rotation;
+	rotationDirection: Rotation;
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
@@ -464,11 +470,12 @@ export class Arc extends CnvDrawing {
 		this.style = style;
 		this.start = start; 
 		this.end = end; 
-		this.rotation = rotation; 
+		this.rotationDirection = rotation; 
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
-			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotation == Rotation.CounterClockwise);
+			MainCanvas.get.rotate(this.rotation, this.center);
+			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotationDirection == Rotation.CounterClockwise);
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;
 		});
@@ -491,15 +498,11 @@ export class MainCanvas extends Singleton {
 	}
 	set color(color: Color) { this.cnv.style.backgroundColor = color.rgba }
 
-	//get drawStyle() { return {lineWidth: this.ctx.lineWidth, strokeStyle: new Color(null, this.ctx.strokeStyle), fillStyle: this.ctx.fillStyle} as DrawStyle }
+	get drawStyle() { return {lineWidth: this.ctx.lineWidth, strokeStyle: this.ctx.strokeStyle, fillStyle: this.ctx.fillStyle} as DrawStyle }
 	set drawStyle(drawStyle: DrawStyle) {
 		this.ctx.lineWidth = coalesce(drawStyle.lineWidth, this.ctx.lineWidth);
-		this.ctx.strokeStyle = coalesce(drawStyle.strokeStyle?.rgba, this.ctx.strokeStyle);
-		this.ctx.fillStyle = coalesce(drawStyle.fillStyle?.rgba, this.ctx.fillStyle);
-		// console.log(isNull(drawStyle.fillStyle));
-		
-		// console.log(drawStyle);
-		// console.log(this.ctx);
+		this.ctx.strokeStyle = coalesce(drawStyle.strokeStyle, this.ctx.strokeStyle);
+		this.ctx.fillStyle = coalesce(drawStyle.fillStyle, this.ctx.fillStyle);
 	}
 
 	get textStyle() { return {textAlign: this.ctx.textAlign, font: this.ctx.font} as TextStyle}
@@ -534,7 +537,7 @@ export class MainCanvas extends Singleton {
 	clean() {
 		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
 	}
-	rotate(angle = new Angle(0), rotationCenter = new Coord(0, 0)) {
+	rotate(angle = new Angle(0), rotationCenter = this.center) {
 		this.ctx.translate(rotationCenter.x, rotationCenter.y);
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);

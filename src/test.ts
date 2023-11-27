@@ -23,7 +23,6 @@ te.style = {textAlign: 'right', font: '30px Arial'};
 l.style = style2;
 tr.style = style2;
 r.style = style2;
-r.rotation = new Angle(45);
 a.render(true)
 te.render(true)
 l.render(true)

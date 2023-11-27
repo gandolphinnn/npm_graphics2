@@ -292,7 +292,6 @@ export class Mesh implements Component { //todo
 export abstract class CnvElement {
 	ctx: CanvasRenderingContext2D;
 	zIndex: number;
-	rotation: Angle;
 
 	protected _center: Coord;
 	get center() { return this._center }
@@ -302,7 +301,6 @@ export abstract class CnvElement {
 		this._center = center;
 		this.ctx = MainCanvas.get.ctx;
 		this.zIndex = zIndex;
-		this.rotation = new Angle(0);
 	}
 	abstract render(drawPoints: boolean): CnvElement;
 	protected drawPoints(points: Coord[] = []) {
@@ -326,7 +324,6 @@ export class Text extends CnvElement {
 	}
 	render(drawPoints = false) {
 		this.ctx.save();
-		MainCanvas.get.rotate(this.rotation, this.center);
 		this.ctx.textAlign = coalesce(this.style.textAlign, this.ctx.textAlign);
 		this.ctx.font = coalesce(this.style.font, this.ctx.font);
 		this.ctx.fillText(this.content, this.center.x, this.center.y);
@@ -383,7 +380,6 @@ export class Line extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
-			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			MainCanvas.get.action(this.action);
@@ -414,7 +410,6 @@ export class Triangle extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
-			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			this.ctx.lineTo(this.points[2].x, this.points[2].y);
@@ -447,7 +442,6 @@ export class Rect extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
-			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints(this.points) : null;
@@ -474,7 +468,6 @@ export class Arc extends CnvDrawing {
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.safeDraw(this.style, () => {
-			MainCanvas.get.rotate(this.rotation, this.center);
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.rotationDirection == Rotation.CounterClockwise);
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;

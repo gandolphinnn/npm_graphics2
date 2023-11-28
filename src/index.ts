@@ -10,6 +10,9 @@ export enum AngleType {
 export enum Rotation {
 	Clockwise, CounterClockwise
 }
+export enum Ground {
+	Back, Middle, Fore
+}
 export enum BaseColor {
 	AliceBlue, AntiqueWhite, Aqua, Aquamarine, Azure, Beige, Bisque, Black, BlanchedAlmond, Blue, BlueViolet, Brown, BurlyWood,
 	CadetBlue, Chartreuse, Chocolate, Coral, CornflowerBlue, Cornsilk, Crimson, Cyan,
@@ -278,13 +281,17 @@ export class Angle {
 	//#endregion
 }
 export class Mesh implements Component { //todo
-	items: CnvElement[];
-	zIndex: number;
+	private _items: CnvElement[];
 	private readonly _center: Coord;
-	set center(coord: Coord) { }
+	zIndex: number;
+
+	set center(coord: Coord) { this._items.forEach(item => {item.center = coord}) }
 	get center() { return this._center; }
+	moveBy(x: number, y: number) {
+		this.center = coordValuesSum(this.center, x, y);
+	}
 	render() {
-		this.items.forEach(item => {
+		this._items.forEach(item => {
 			item.render(false);
 		});
 	}

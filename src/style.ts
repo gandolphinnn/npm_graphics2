@@ -190,7 +190,7 @@ export class Color implements Style {
 	set set(string: string) { this.setStr(string) }
 
 	constructor(colorName?: ColorName, alpha = 1) {
-		this.setName(colorName, alpha);
+		if (colorName) this.setName(colorName, alpha);
 	}
 	setName(colorName: ColorName, alpha?: number) {
 		this.setRGBA(COLORNAME_RGB[colorName], alpha);
@@ -201,6 +201,7 @@ export class Color implements Style {
 			this.red = rgba.red;
 			this.green = rgba.green;
 			this.blue = rgba.blue;
+			this.alpha = coalesce(alpha, rgba.alpha, this.alpha);
 		}
 		return this;
 	}
@@ -209,7 +210,7 @@ export class Color implements Style {
 		this.red = rgba.red;
 		this.green = rgba.green;
 		this.blue = rgba.blue;
-		this.alpha = coalesce(alpha, this.alpha);
+		this.alpha = coalesce(alpha, rgba.alpha, this.alpha);
 		return this;
 	}
 }
@@ -288,13 +289,14 @@ export class Pattern implements Style {
 export function clampRGBA(rgba: RGBA) {
 	return {red: clamp(rgba.red, 0, 255), green: clamp(rgba.green, 0, 255), blue: clamp(rgba.blue, 0, 255), alpha: clamp(rgba.alpha, 0, 1)} as RGBA;
 }
-export function parseRGBA(str: string): RGBA | null {
+export function parseRGBA(str: string) {
 	let match = coalesce(str.match(RGBA_PATTERN), str.match(RGB_PATTERN), str.match(HEX_LONG_PATTERN), str.match(HEX_SHORT_PATTERN)) as RegExpMatchArray;
+	
 	if (!match) {
 		return null;
 	}
 	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);	
-	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha, 1)})
+	return clampRGBA({red: red, green: green, blue: blue, alpha: alpha})
 }
 export const DRAWSTYLE_DEFAULT: DrawStyle = {
 	lineWidth: 1,

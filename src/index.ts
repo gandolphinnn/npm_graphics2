@@ -26,6 +26,7 @@ export const DRAWPOINTS_RADIUS = 3;
 export class Coord {
 	x: number;
 	y: number;
+	get copy() { return new Coord(this.x, this.y) }
 	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;

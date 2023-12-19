@@ -149,6 +149,9 @@ export const HEX_SHORT_PATTERN: RegExp = /^\#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA
 export const RGB_PATTERN: RegExp = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/
 export const RGBA_PATTERN: RegExp = /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([01](?:\.\d+)?)\))?$/
 
+/**
+ * @example "10px Arial"
+*/
 export type Font = `${number}px ${string}`;
 export interface Style {
 	get get(): string | CanvasGradient | CanvasPattern;
@@ -160,9 +163,6 @@ export interface DrawStyle {
 	fillStyle?: Style
 }
 export interface WriteStyle extends DrawStyle {
-	/**
-	 * @example "10px Arial"
-	*/
 	font?: Font,
 	/**
 	 * @example "left" means the center is just to the left of the text

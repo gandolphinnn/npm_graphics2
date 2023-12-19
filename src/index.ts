@@ -76,6 +76,9 @@ export class Angle {
 	get atanh() { return Math.atanh(this._radians); }
 	//#endregion
 }
+/**
+ * A collection of CnvElements
+ */
 export class Mesh implements Component { //todo
 	private _items: CnvElement[];
 	private readonly _center: Coord;
@@ -83,12 +86,12 @@ export class Mesh implements Component { //todo
 
 	set center(coord: Coord) { this._items.forEach(item => {item.center = coord}) }
 	get center() { return this._center; }
+	moveBy(x: number, y: number) {
+		this.center = COORDS.sumXY(this.center, x, y);
+	}
 	addItem(element: CnvElement) {
 		this._items.push(element);
 		this._items = Enumerable.from(this._items).orderBy(elem => elem.zIndex).toArray()
-	}
-	moveBy(x: number, y: number) {
-		this.center = COORDS.sumXY(this.center, x, y);
 	}
 	render() {
 		this._items.forEach(item => {

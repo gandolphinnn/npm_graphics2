@@ -1,4 +1,4 @@
-import { StaticList, overflow, clamp, coalesce, Singleton, arrPivot, arrLast } from '@gandolphinnn/utils';
+import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
 import { ColorName, DrawStyle, Font, WriteStyle, COLORNAME_RGB, RGBA_PATTERN, RGBA, Color, parseRGBA, decToHex, hexToDec, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './style.js';
 export * from './style.js';
 
@@ -75,17 +75,17 @@ export class Angle {
 	//#endregion
 }
 export class Mesh implements Component { //todo
-	private _items: StaticList<CnvElement>;
+	private _items: CnvElement[];
 	private readonly _center: Coord;
 	zIndex: number;
 
-	set center(coord: Coord) { this._items.data.forEach(item => {item.center = coord}) }
+	set center(coord: Coord) { this._items.forEach(item => {item.center = coord}) }
 	get center() { return this._center; }
 	moveBy(x: number, y: number) {
 		this.center = COORDS.sumXY(this.center, x, y);
 	}
 	render() {
-		this._items.data.forEach(item => {
+		this._items.forEach(item => {
 			item.render(false);
 		});
 	}
@@ -221,7 +221,7 @@ export class Path extends CnvDrawing {
 			lines.push(new Line(this.points[i-1], this.points[i]));
 		}
 		if (this.closed) {
-			lines.push(new Line(arrLast(this.points), this.points[0]))
+			lines.push(new Line(this.points.last(), this.points[0]))
 		}
 		return lines;
 	}

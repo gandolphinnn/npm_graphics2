@@ -1,5 +1,5 @@
 import { MainCanvas, Coord, Circle, Angle } from './index.js';
-import { StaticList, clamp, coalesce } from '@gandolphinnn/utils';
+import { Dictionary, clamp, coalesce } from '@gandolphinnn/utils';
 
 export const COLORNAME_RGB: Record<ColorName, RGBA> = {
 	'AliceBlue':			{red: 240,	green: 248,	blue: 255,	alpha: 1},
@@ -223,7 +223,7 @@ export abstract class Gradient implements Style {
 	private _builder: Function;
 	private _buildParams: any[];
 
-	stops: Record<number, string>;
+	stops: Dictionary<number, string>;
 	constructor(builder: Function, buildParams: any[]) {
 		this._builder = builder;
 		this._buildParams = buildParams;

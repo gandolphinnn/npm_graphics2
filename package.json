@@ -23,7 +23,7 @@
 	},
 	"homepage": "https://github.com/gandolphinnn/npm_graphics2#readme",
 	"dependencies": {
-		"@gandolphinnn/utils": "^2.4.0"
+		"@gandolphinnn/utils": "^3.0.2"
 	},
 	"devDependencies": {
 		"@parcel/config-default": "^2.10.3",

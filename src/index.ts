@@ -1,5 +1,7 @@
 import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { ColorName, DrawStyle, Font, WriteStyle, COLORNAME_RGB, RGBA_PATTERN, RGBA, Color, parseRGBA, decToHex, hexToDec, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './style.js';
+import { DrawStyle, WriteStyle, Color, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './style.js';
+import Enumerable from 'linq';
+
 export * from './style.js';
 
 //#region Enums, Types, Interfaces and Constants
@@ -81,6 +83,10 @@ export class Mesh implements Component { //todo
 
 	set center(coord: Coord) { this._items.forEach(item => {item.center = coord}) }
 	get center() { return this._center; }
+	addItem(element: CnvElement) {
+		this._items.push(element);
+		this._items = Enumerable.from(this._items).orderBy(elem => elem.zIndex).toArray()
+	}
 	moveBy(x: number, y: number) {
 		this.center = COORDS.sumXY(this.center, x, y);
 	}

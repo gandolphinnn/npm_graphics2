@@ -1,8 +1,15 @@
-import { MainCanvas, Coord, Color, Angle, DrawStyle, Text, Arc, Line, Triangle, Rect, Path, parseRGBA, RGBA, hexToDec, clampRGBA, Rotation, Circle } from './index.js';
-import { test, clamp } from '@gandolphinnn/utils';
+import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle } from './index.js';
+import { test, Dictionary } from '@gandolphinnn/utils';
 const c1 = MainCanvas.get;
 
-console.log(clamp(null, 0, 100));
+let stops: Dictionary<number, Color> = {};
+stops[0] = new Color('Red');
+stops[1] = new Color('Lime');
+stops[2] = new Color('Blue');
+console.log(stops);
+Object.keys(stops).forEach(key => {
+	console.log(stops[parseFloat(key)]);
+});
 
 test('rgbParse INVALID', parseRGBA(''), null);
 test('rgbParse RGBA', parseRGBA('rgba(4,3,2,0.6)'), {red: 4, green: 3, blue: 2, alpha: 0.6} as RGBA);

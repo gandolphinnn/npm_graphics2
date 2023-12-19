@@ -1,5 +1,5 @@
 import { MainCanvas, Coord, Circle, Angle } from './index.js';
-import { Dictionary, clamp, coalesce } from '@gandolphinnn/utils';
+import { Dictionary, clamp, coalesce, hexToDec, decToHex } from '@gandolphinnn/utils';
 
 export const COLORNAME_RGB: Record<ColorName, RGBA> = {
 	'AliceBlue':			{red: 240,	green: 248,	blue: 255,	alpha: 1},
@@ -223,7 +223,7 @@ export abstract class Gradient implements Style {
 	private _builder: Function;
 	private _buildParams: any[];
 
-	stops: Dictionary<number, string>;
+	stops: Dictionary<number, Color> = {};
 	constructor(builder: Function, buildParams: any[]) {
 		this._builder = builder;
 		this._buildParams = buildParams;
@@ -231,7 +231,6 @@ export abstract class Gradient implements Style {
 
 	build() {
 		this._val = this._builder(...this._buildParams)
-		//todo foreach stops
 		return this.get;
 	}
 }
@@ -295,8 +294,8 @@ export function parseRGBA(str: string) {
 	if (!match) {
 		return null;
 	}
-	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);	
-	return clampRGBA({red: red, green: green, blue: blue, alpha: alpha})
+	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);
+	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha)})
 }
 export const DRAWSTYLE_DEFAULT: DrawStyle = {
 	lineWidth: 1,
@@ -312,13 +311,3 @@ export const WRITESTYLE_DEFAULT: WriteStyle = {
 }
 export const DRAWSTYLE_EMPTY: DrawStyle = { lineWidth: null, strokeStyle: null, fillStyle: null }
 export const WRITESTYLE_EMPTY: WriteStyle = { lineWidth: null, strokeStyle: null, fillStyle: null, font: null, textAlign: null }
-
-
-
-//todo move these into Utils
-export function decToHex(dec: number) {
-	return ('0'+ dec.toString(16).toUpperCase()).slice(-2);
-}
-export function hexToDec(hex: string) {
-	return clamp(parseInt(hex, 16), 0, 255);
-}

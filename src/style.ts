@@ -1,6 +1,6 @@
-import { MainCanvas, Coord, Circle, Angle } from './index.js';
 import { clamp, coalesce, hexToDec, decToHex } from '@gandolphinnn/utils';
 
+//#region Constants 1
 export const COLORNAME_RGB: Record<ColorName, RGBA> = {
 	'AliceBlue':			{red: 240,	green: 248,	blue: 255,	alpha: 1},
 	'AntiqueWhite':			{red: 250,	green: 235,	blue: 215,	alpha: 1},
@@ -148,11 +148,15 @@ export const HEX_LONG_PATTERN: RegExp = /^\#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-
 export const HEX_SHORT_PATTERN: RegExp = /^\#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/
 export const RGB_PATTERN: RegExp = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/
 export const RGBA_PATTERN: RegExp = /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([01](?:\.\d+)?)\))?$/
+//#endregion
 
+//#region Types and Interfaces
 /**
  * @example "10px Arial"
 */
+export type ColorName = 'AliceBlue' | 'AntiqueWhite' | 'Aqua' | 'Aquamarine' | 'Azure' | 'Beige' | 'Bisque' | 'Black' | 'BlanchedAlmond' | 'Blue' | 'BlueViolet' | 'Brown' | 'BurlyWood' | 'CadetBlue' | 'Chartreuse' | 'Chocolate' | 'Coral' | 'CornflowerBlue' | 'Cornsilk' | 'Crimson' | 'Cyan' | 'DarkBlue' | 'DarkCyan' | 'DarkGoldenRod' | 'DarkGrey' | 'DarkGreen' | 'DarkKhaki' | 'DarkMagenta' | 'DarkOliveGreen' | 'DarkOrange' | 'DarkOrchid' | 'DarkRed' | 'DarkSalmon' | 'DarkSeaGreen' | 'DarkSlateBlue' | 'DarkSlateGrey' | 'DarkTurquoise' | 'DarkViolet' | 'DeepPink' | 'DeepSkyBlue' | 'DimGrey' | 'DodgerBlue' | 'FireBrick' | 'FloralWhite' | 'ForestGreen' | 'Fuchsia' | 'Gainsboro' | 'GhostWhite' | 'Gold' | 'GoldenRod' | 'Grey' | 'Green' | 'GreenYellow' | 'HoneyDew' | 'HotPink' | 'IndianRed' | 'Indigo' | 'Ivory' | 'Khaki' | 'Lavender' | 'LavenderBlush' | 'LawnGreen' | 'LemonChiffon' | 'LightBlue' | 'LightCoral' | 'LightCyan' | 'LightGoldenRodYellow' | 'LightGrey' | 'LightGreen' | 'LightPink' | 'LightSalmon' | 'LightSeaGreen' | 'LightSkyBlue' | 'LightSlateGrey' | 'LightSteelBlue' | 'LightYellow' | 'Lime' | 'LimeGreen' | 'Linen' | 'Magenta' | 'Maroon' | 'MediumAquaMarine' | 'MediumBlue' | 'MediumOrchid' | 'MediumPurple' | 'MediumSeaGreen' | 'MediumSlateBlue' | 'MediumSpringGreen' | 'MediumTurquoise' | 'MediumVioletRed' | 'MidnightBlue' | 'MintCream' | 'MistyRose' | 'Moccasin' | 'NavajoWhite' | 'Navy' | 'OldLace' | 'Olive' | 'OliveDrab' | 'Orange' | 'OrangeRed' | 'Orchid' | 'PaleGoldenRod' | 'PaleGreen' | 'PaleTurquoise' | 'PaleVioletRed' | 'PapayaWhip' | 'PeachPuff' | 'Peru' | 'Pink' | 'Plum' | 'PowderBlue' | 'Purple' | 'RebeccaPurple' | 'Red' | 'RosyBrown' | 'RoyalBlue' | 'SaddleBrown' | 'Salmon' | 'SandyBrown' | 'SeaGreen' | 'SeaShell' | 'Sienna' | 'Silver' | 'SkyBlue' | 'SlateBlue' | 'SlateGrey' | 'Snow' | 'SpringGreen' | 'SteelBlue' | 'Tan' | 'Teal' | 'Thistle' | 'Tomato' | 'Turquoise' | 'Violet' | 'Wheat' | 'White' | 'WhiteSmoke' | 'Yellow' | 'YellowGreen'
 export type Font = `${number}px ${string}`;
+
 export interface Style {
 	get get(): string | CanvasGradient | CanvasPattern;
 	set set(val: string | CanvasGradient | CanvasPattern);
@@ -169,14 +173,15 @@ export interface WriteStyle extends DrawStyle {
 	*/
 	textAlign?: CanvasTextAlign
 }
-
-export type ColorName = 'AliceBlue' | 'AntiqueWhite' | 'Aqua' | 'Aquamarine' | 'Azure' | 'Beige' | 'Bisque' | 'Black' | 'BlanchedAlmond' | 'Blue' | 'BlueViolet' | 'Brown' | 'BurlyWood' | 'CadetBlue' | 'Chartreuse' | 'Chocolate' | 'Coral' | 'CornflowerBlue' | 'Cornsilk' | 'Crimson' | 'Cyan' | 'DarkBlue' | 'DarkCyan' | 'DarkGoldenRod' | 'DarkGrey' | 'DarkGreen' | 'DarkKhaki' | 'DarkMagenta' | 'DarkOliveGreen' | 'DarkOrange' | 'DarkOrchid' | 'DarkRed' | 'DarkSalmon' | 'DarkSeaGreen' | 'DarkSlateBlue' | 'DarkSlateGrey' | 'DarkTurquoise' | 'DarkViolet' | 'DeepPink' | 'DeepSkyBlue' | 'DimGrey' | 'DodgerBlue' | 'FireBrick' | 'FloralWhite' | 'ForestGreen' | 'Fuchsia' | 'Gainsboro' | 'GhostWhite' | 'Gold' | 'GoldenRod' | 'Grey' | 'Green' | 'GreenYellow' | 'HoneyDew' | 'HotPink' | 'IndianRed' | 'Indigo' | 'Ivory' | 'Khaki' | 'Lavender' | 'LavenderBlush' | 'LawnGreen' | 'LemonChiffon' | 'LightBlue' | 'LightCoral' | 'LightCyan' | 'LightGoldenRodYellow' | 'LightGrey' | 'LightGreen' | 'LightPink' | 'LightSalmon' | 'LightSeaGreen' | 'LightSkyBlue' | 'LightSlateGrey' | 'LightSteelBlue' | 'LightYellow' | 'Lime' | 'LimeGreen' | 'Linen' | 'Magenta' | 'Maroon' | 'MediumAquaMarine' | 'MediumBlue' | 'MediumOrchid' | 'MediumPurple' | 'MediumSeaGreen' | 'MediumSlateBlue' | 'MediumSpringGreen' | 'MediumTurquoise' | 'MediumVioletRed' | 'MidnightBlue' | 'MintCream' | 'MistyRose' | 'Moccasin' | 'NavajoWhite' | 'Navy' | 'OldLace' | 'Olive' | 'OliveDrab' | 'Orange' | 'OrangeRed' | 'Orchid' | 'PaleGoldenRod' | 'PaleGreen' | 'PaleTurquoise' | 'PaleVioletRed' | 'PapayaWhip' | 'PeachPuff' | 'Peru' | 'Pink' | 'Plum' | 'PowderBlue' | 'Purple' | 'RebeccaPurple' | 'Red' | 'RosyBrown' | 'RoyalBlue' | 'SaddleBrown' | 'Salmon' | 'SandyBrown' | 'SeaGreen' | 'SeaShell' | 'Sienna' | 'Silver' | 'SkyBlue' | 'SlateBlue' | 'SlateGrey' | 'Snow' | 'SpringGreen' | 'SteelBlue' | 'Tan' | 'Teal' | 'Thistle' | 'Tomato' | 'Turquoise' | 'Violet' | 'Wheat' | 'White' | 'WhiteSmoke' | 'Yellow' | 'YellowGreen'
 export interface RGBA {
 	red: number,
 	green: number,
 	blue: number
 	alpha: number | null
 }
+//#endregion
+
+//#region Color
 export class Color implements Style {
 	red: number;
 	green: number;
@@ -214,85 +219,9 @@ export class Color implements Style {
 		return this;
 	}
 }
-//#region Gradients
-export abstract class Gradient implements Style {
-	protected _val: CanvasGradient;
-	get get() { return this._val }
-	set set(canvasGradient: CanvasGradient) { this._val = canvasGradient }
-
-	stops: Record<number, Color>;
-	protected buildStops() {
-		for (const key in this.stops) {
-			this._val.addColorStop(parseFloat(key), this.stops[key].rgbaStr);
-		}
-	}
-}
-export class LinearGradient extends Gradient {
-	start: Coord;
-	end: Coord;
-	constructor(start: Coord, end: Coord) {
-		super();
-		this.start = start;
-		this.end = end;
-		this.build();
-	}
-	build() {
-		this._val = MainCanvas.get.ctx.createLinearGradient( this.start.y, this.start.y, this.end.x, this.end.y);
-		this.buildStops();
-		return this.get;
-	}
-} 
-export class ConicGradient extends Gradient {
-	startAngle: Angle;
-	center: Coord;
-	constructor(startAngle: Angle, center: Coord) {
-		super();
-		this.startAngle = startAngle;
-		this.center = center;
-		this.build();
-	}
-	build() {
-		this._val = MainCanvas.get.ctx.createConicGradient( this.startAngle.radians, this.center.x, this.center.y);
-		this.buildStops();
-		return this.get;
-	}
-}
-export class RadialGradient extends Gradient {
-	start: Circle;
-	end: Circle;
-	constructor(start: Circle, end: Circle) {
-		super();
-		this.start = start;
-		this.end = end;
-		this.build();
-	}
-	build() {
-		this._val = MainCanvas.get.ctx.createRadialGradient( this.start.center.x, this.start.center.y, this.start.radius, this.end.center.x, this.end.center.y, this.end.radius);
-		this.buildStops();
-		return this.get;
-	}
-}
 //#endregion
 
-//#region Pattern
-export type Repetition = 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat'
-export class Pattern implements Style {
-	private _val: CanvasPattern;
-	get get() { return this._val }
-	set set(canvasPattern: CanvasPattern) { this._val = canvasPattern }
-
-	image: CanvasImageSource;
-	repetition: Repetition;
-	constructor(image: CanvasImageSource, repetition: Repetition) {
-		this.image = image;
-		this.repetition = repetition;
-	}
-	build() {
-		this.set = MainCanvas.get.ctx.createPattern(this.image, this.repetition);
-		return this.get;
-	}
-}
-//#endregion
+//#region Functions
 export function clampRGBA(rgba: RGBA) {
 	return {red: clamp(rgba.red, 0, 255), green: clamp(rgba.green, 0, 255), blue: clamp(rgba.blue, 0, 255), alpha: clamp(rgba.alpha, 0, 1)} as RGBA;
 }
@@ -305,17 +234,12 @@ export function parseRGBA(str: string) {
 	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);
 	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha)})
 }
-export const DRAWSTYLE_DEFAULT: DrawStyle = {
-	lineWidth: 1,
-	strokeStyle: new Color().setStr('#000'),
-	fillStyle: new Color().setStr('#000'),
-}
-export const WRITESTYLE_DEFAULT: WriteStyle = {
-	lineWidth: 1,
-	strokeStyle: new Color().setStr('#000'),
-	fillStyle: new Color().setStr('#000'),
-	textAlign: 'center',
-	font: '10px Arial'
-}
-export const DRAWSTYLE_EMPTY: DrawStyle = { lineWidth: null, strokeStyle: null, fillStyle: null }
-export const WRITESTYLE_EMPTY: WriteStyle = { lineWidth: null, strokeStyle: null, fillStyle: null, font: null, textAlign: null }
+//#endregion
+
+//#region Constants 2
+const black = new Color('Black'); //! do not export
+export const DRAWSTYLE_DEFAULT: DrawStyle =		{ lineWidth: 1,		strokeStyle: black,	fillStyle: black }
+export const DRAWSTYLE_EMPTY: DrawStyle =		{ lineWidth: null,	strokeStyle: null,	fillStyle: null }
+export const WRITESTYLE_DEFAULT: WriteStyle =	{ lineWidth: 1,		strokeStyle: black,	fillStyle: black,	font: '10px Arial',	textAlign: 'center' }
+export const WRITESTYLE_EMPTY: WriteStyle =		{ lineWidth: null,	strokeStyle: null,	fillStyle: null,	font: null,			textAlign: null }
+//#endregion

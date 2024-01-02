@@ -1,15 +1,13 @@
-import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle } from './index.js';
-import { test, Dictionary } from '@gandolphinnn/utils';
+import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle, LinearGradient } from './index.js';
+import { test } from '@gandolphinnn/utils';
 const c1 = MainCanvas.get;
 
-let stops: Dictionary<number, Color> = {};
-stops[0] = new Color('Red');
-stops[1] = new Color('Lime');
-stops[2] = new Color('Blue');
-console.log(stops);
-Object.keys(stops).forEach(key => {
-	console.log(stops[parseFloat(key)]);
-});
+const gr = new LinearGradient(new Coord(0, 0), new Coord(100, 100));
+gr.stops[0] = new Color('Red');
+gr.stops[.5] = new Color('Green');
+gr.stops[1] = new Color('Blue');
+gr.build();
+c1.drawStyle.fillStyle = gr;
 
 test('rgbParse INVALID', parseRGBA(''), null);
 test('rgbParse RGBA', parseRGBA('rgba(4,3,2,0.6)'), {red: 4, green: 3, blue: 2, alpha: 0.6} as RGBA);

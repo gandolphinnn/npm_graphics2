@@ -1,5 +1,5 @@
 import { MainCanvas, Coord, Circle, Angle } from './index.js';
-import { Dictionary, clamp, coalesce, hexToDec, decToHex } from '@gandolphinnn/utils';
+import { clamp, coalesce, hexToDec, decToHex } from '@gandolphinnn/utils';
 
 export const COLORNAME_RGB: Record<ColorName, RGBA> = {
 	'AliceBlue':			{red: 240,	green: 248,	blue: 255,	alpha: 1},
@@ -216,52 +216,60 @@ export class Color implements Style {
 }
 //#region Gradients
 export abstract class Gradient implements Style {
-	private _val: CanvasGradient;
+	protected _val: CanvasGradient;
 	get get() { return this._val }
 	set set(canvasGradient: CanvasGradient) { this._val = canvasGradient }
 
-	private _builder: Function;
-	private _buildParams: any[];
-
-	stops: Dictionary<number, Color> = {};
-	constructor(builder: Function, buildParams: any[]) {
-		this._builder = builder;
-		this._buildParams = buildParams;
-	}
-
-	build() {
-		this._val = this._builder(...this._buildParams)
-		return this.get;
+	stops: Record<number, Color>;
+	protected buildStops() {
+		for (const key in this.stops) {
+			this._val.addColorStop(parseFloat(key), this.stops[key].rgbaStr);
+		}
 	}
 }
 export class LinearGradient extends Gradient {
 	start: Coord;
 	end: Coord;
 	constructor(start: Coord, end: Coord) {
-		super(MainCanvas.get.ctx.createLinearGradient, [start.y, start.y, end.x, end.y]);
+		super();
 		this.start = start;
 		this.end = end;
 		this.build();
+	}
+	build() {
+		this._val = MainCanvas.get.ctx.createLinearGradient( this.start.y, this.start.y, this.end.x, this.end.y);
+		this.buildStops();
+		return this.get;
 	}
 } 
 export class ConicGradient extends Gradient {
 	startAngle: Angle;
 	center: Coord;
 	constructor(startAngle: Angle, center: Coord) {
-		super(MainCanvas.get.ctx.createConicGradient, [startAngle.radians, center.x, center.y]);
+		super();
 		this.startAngle = startAngle;
 		this.center = center;
 		this.build();
+	}
+	build() {
+		this._val = MainCanvas.get.ctx.createConicGradient( this.startAngle.radians, this.center.x, this.center.y);
+		this.buildStops();
+		return this.get;
 	}
 }
 export class RadialGradient extends Gradient {
 	start: Circle;
 	end: Circle;
 	constructor(start: Circle, end: Circle) {
-		super(MainCanvas.get.ctx.createRadialGradient, [start.center.x, start.center.y, start.radius, end.center.x, end.center.y, end.radius]);
+		super();
 		this.start = start;
 		this.end = end;
 		this.build();
+	}
+	build() {
+		this._val = MainCanvas.get.ctx.createRadialGradient( this.start.center.x, this.start.center.y, this.start.radius, this.end.center.x, this.end.center.y, this.end.radius);
+		this.buildStops();
+		return this.get;
 	}
 }
 //#endregion

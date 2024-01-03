@@ -229,6 +229,10 @@ export function parseRGBA(str: string) {
 	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);
 	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha)})
 }
+export function getStringIfColor(style: Style) {
+	//todo console.log(typeof style);
+	return ''
+}
 //#endregion
 
 //#region Constants 2

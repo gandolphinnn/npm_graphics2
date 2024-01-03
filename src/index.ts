@@ -1,5 +1,5 @@
 import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { DrawStyle, WriteStyle, Color, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './style.js';
+import { DrawStyle, WriteStyle, Color, getStringIfColor, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
@@ -138,26 +138,29 @@ export abstract class CnvElement {
 }
 export class Text extends CnvElement {
 	content: string;
-	private _style: WriteStyle;
-	get style() { return this._style }
-	set style(style: WriteStyle | null) { this._style = coalesce(style, {} as WriteStyle) }
+	private _customStyle: WriteStyle;
+	get customStyle() { return this._customStyle }
+	set customStyle(customStyle: WriteStyle | null) { this._customStyle = coalesce(customStyle, {} as WriteStyle) }
 
-	constructor(center: Coord, content: string, style?: WriteStyle) {
+	constructor(center: Coord, content: string, customStyle?: WriteStyle) {
 		super(center, RenderAction.Both);
 		this.content = content;
-		this.style = style;
+		this.customStyle = customStyle;
 	}
-	setStyle(style: WriteStyle | null) {
-		this.style = style;
+	setStyle(customStyle: WriteStyle | null) {
+		this.customStyle = customStyle;
 		return this;
 	}
 	render(drawPoints = false) {
-		this.ctx.save();
-		this.ctx.textAlign = coalesce(this.style.textAlign, this.ctx.textAlign);
-		this.ctx.font = coalesce(this.style.font, this.ctx.font);
-		this.ctx.fillText(this.content, this.center.x, this.center.y);
-		drawPoints? this.drawPoints() : null;
-		this.ctx.restore();
+		MainCanvas.get.write(this.customStyle, () => {
+			if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {
+				this.ctx.fillText(this.content, this.center.x, this.center.y);
+			}
+			if (this.action == RenderAction.Both || this.action == RenderAction.Stroke) {
+				this.ctx.strokeText(this.content, this.center.x, this.center.y);
+			}
+			drawPoints? this.drawPoints() : null;
+		})
 		return this;
 	}
 }
@@ -178,16 +181,16 @@ export class Text extends CnvElement {
 	}
 }*/
 export abstract class CnvDrawing extends CnvElement {
-	private _style: DrawStyle;
-	get style() { return this._style }
-	set style(style: DrawStyle | null) { this._style = coalesce(style, {lineWidth: null, stroke: null, fill: null}) }
+	private _customStyle: DrawStyle;
+	get customStyle() { return this._customStyle }
+	set customStyle(customStyle: DrawStyle | null) { this._customStyle = coalesce(customStyle, {lineWidth: null, stroke: null, fill: null}) }
 
 	constructor(action: RenderAction, center: Coord) {
 		super(center, action);
-		this.style = null;
+		this.customStyle = null;
 	}
-	setStyle(style: DrawStyle | null) {
-		this.style = style;
+	setStyle(customStyle: DrawStyle | null) {
+		this.customStyle = customStyle;
 		return this;
 	}
 }
@@ -209,7 +212,7 @@ export class Line extends CnvDrawing {
 		this.points[1] = COORDS.sumXY(this.points[1], diff.width, diff.height)
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
+		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			MainCanvas.get.action(this.action);
@@ -262,7 +265,7 @@ export class Path extends CnvDrawing {
 	}
 	getPoint(index: number) { return this.points[overflow(index, 0, this.nPoints)] }
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
+		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			for (let i = 1; i < this.nPoints; i++) {
 				length += (!this.closed && i == this.nPoints - 1)? 0 : COORDS.distance(this.points[i], this.getPoint(i+1))
@@ -292,7 +295,7 @@ export class Triangle extends CnvDrawing {
 		this.points = points;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
+		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
 			this.ctx.lineTo(this.points[2].x, this.points[2].y);
@@ -324,7 +327,7 @@ export class Rect extends CnvDrawing {
 		this.size = size;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
+		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints(this.points) : null;
@@ -343,7 +346,7 @@ export class Circle extends CnvDrawing {
 		this.radius = radius;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
+		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;
@@ -370,7 +373,7 @@ export class Arc extends CnvDrawing {
 		this.cutByCenter = cutByCenter;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
+		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, Boolean(this.rotationDirection));
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;
@@ -385,8 +388,8 @@ export class MainCanvas extends Singleton {
 
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
-	private _drawStyle: DrawStyle;
-	private _writeStyle: WriteStyle;
+	private _defaultDrawStyle: DrawStyle;
+	private _defaultWriteStyle: WriteStyle;
 
 	//todo private _items: Record<number, Mesh>[];
 
@@ -395,22 +398,22 @@ export class MainCanvas extends Singleton {
 	get color() { return new Color().setStr(this.cnv.style.backgroundColor)	}
 	set color(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
 
-	get drawStyle() { return this.drawStyle }
-	set drawStyle(drawStyle: DrawStyle) {
-		this._drawStyle = {
-			lineWidth: coalesce(this._drawStyle.lineWidth, drawStyle.lineWidth),
-			strokeStyle: coalesce(this._drawStyle.strokeStyle, drawStyle.strokeStyle),
-			fillStyle: coalesce(this._drawStyle.fillStyle, drawStyle.fillStyle)
+	get defaultDrawStyle() { return this._defaultDrawStyle }
+	set defaultDrawStyle(defaultDrawStyle: DrawStyle) {
+		this._defaultDrawStyle = {
+			lineWidth:		coalesce(defaultDrawStyle.lineWidth,	this._defaultDrawStyle.lineWidth),
+			strokeStyle:	coalesce(defaultDrawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle),
+			fillStyle:		coalesce(defaultDrawStyle.fillStyle,	this._defaultDrawStyle.fillStyle)
 		}
 	}
-	get writeStyle() { return this.writeStyle }
-	set writeStyle(writeStyle: WriteStyle) {
-		this._writeStyle = {
-			lineWidth: coalesce(this._writeStyle.lineWidth, writeStyle.lineWidth),
-			strokeStyle: coalesce(this._writeStyle.strokeStyle, writeStyle.strokeStyle),
-			fillStyle: coalesce(this._writeStyle.fillStyle, writeStyle.fillStyle),
-			font: coalesce(this._writeStyle.font, writeStyle.font),
-			textAlign: coalesce(this._writeStyle.textAlign, writeStyle.textAlign)
+	get defaultWriteStyle() { return this._defaultWriteStyle }
+	set defaultWriteStyle(defaultWriteStyle: WriteStyle) {
+		this._defaultWriteStyle = {
+			lineWidth:		coalesce(defaultWriteStyle.lineWidth,	this._defaultWriteStyle.lineWidth),
+			strokeStyle:	coalesce(defaultWriteStyle.strokeStyle,	this._defaultWriteStyle.strokeStyle),
+			fillStyle:		coalesce(defaultWriteStyle.fillStyle,	this._defaultWriteStyle.fillStyle),
+			font:			coalesce(defaultWriteStyle.font,		this._defaultWriteStyle.font),
+			textAlign:		coalesce(defaultWriteStyle.textAlign,	this._defaultWriteStyle.textAlign)
 		}
 	}
 
@@ -427,8 +430,8 @@ export class MainCanvas extends Singleton {
 		body.appendChild(this.cnv);
 		this.ctx = this.cnv.getContext('2d')!;
 
-		this._drawStyle = DRAWSTYLE_DEFAULT;
-		this._writeStyle = WRITESTYLE_DEFAULT;
+		this._defaultDrawStyle = DRAWSTYLE_DEFAULT;
+		this._defaultWriteStyle = WRITESTYLE_DEFAULT;
 		
 		console.log('Main canvas set');
 	}
@@ -442,22 +445,31 @@ export class MainCanvas extends Singleton {
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}
-	applyDrawStyle(drawStyle: DrawStyle) {
-
+	applyCustomDrawStyle(drawStyle: DrawStyle) {
+		this.ctx.lineWidth		= coalesce(drawStyle.lineWidth,		this._defaultDrawStyle.lineWidth),
+		this.ctx.strokeStyle	= getStringIfColor(coalesce(drawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle)),
+		this.ctx.fillStyle		= getStringIfColor(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
 	}
-	applyWriteStyle(writeStyle: WriteStyle) {
-
+	applyCustomWriteStyle(writeStyle: WriteStyle) {
+		console.log(writeStyle.fillStyle);
+		console.log(this._defaultWriteStyle.fillStyle);
+		console.log(coalesce(writeStyle.fillStyle,	this._defaultWriteStyle.fillStyle));
+		this.ctx.lineWidth		= coalesce(writeStyle.lineWidth,	this._defaultWriteStyle.lineWidth),
+		this.ctx.strokeStyle	= getStringIfColor(coalesce(writeStyle.strokeStyle,	this._defaultWriteStyle.strokeStyle)),
+		this.ctx.fillStyle		= getStringIfColor(coalesce(writeStyle.fillStyle,	this._defaultWriteStyle.fillStyle)),
+		this.ctx.font			= coalesce(writeStyle.font,			this._defaultWriteStyle.font),
+		this.ctx.textAlign		= coalesce(writeStyle.textAlign,	this._defaultWriteStyle.textAlign)
 	}
 	draw(drawStyle: DrawStyle, renderCallBack: Function) {
 		this.ctx.save();
-		this.drawStyle = drawStyle;
+		this.applyCustomDrawStyle(drawStyle);
 		this.ctx.beginPath();
 		renderCallBack();
 		this.ctx.restore();
 	}
 	write(writeStyle: WriteStyle, renderCallBack: Function) {
 		this.ctx.save();
-		this.writeStyle = writeStyle;
+		this.applyCustomWriteStyle(writeStyle);
 		renderCallBack();
 		this.ctx.restore();
 	}

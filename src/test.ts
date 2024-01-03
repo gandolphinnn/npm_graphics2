@@ -1,5 +1,5 @@
 import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle } from './index.js';
-import { test } from '@gandolphinnn/utils';
+import { test, parentName } from '@gandolphinnn/utils';
 const c1 = MainCanvas.get;
 
 test('rgbParse INVALID', parseRGBA(''), null);
@@ -8,11 +8,20 @@ test('rgbParse RGB', parseRGBA('rgb(300,6,5)'), {red: 255, green: 6, blue: 5, al
 test('rgbParse HEX1', parseRGBA('#abc'), {red: 10, green: 11, blue: 12, alpha: null} as RGBA);
 test('rgbParse HEX2', parseRGBA('#abcdef'), {red: 171, green: 205, blue: 239, alpha: null} as RGBA);
 
-c1.color = new Color();
-c1.drawSampleMetric(true, 50);
+const color = new Color('Black');
+const gradient = c1.ctx.createLinearGradient(0,0,100,100)
+const pattern = c1.ctx.createPattern(new Image(), 'no-repeat')
 
-c1.writeStyle = {textAlign: 'center', font: '40px arial'};
-c1.drawStyle = {fillStyle: new Color('Red', .3)};
+console.log(Object.getPrototypeOf(color).constructor.name);
+console.log(Object.getPrototypeOf(gradient).constructor.name);
+console.log(Object.getPrototypeOf(pattern));
+//console.log(parentName());
+//console.log(parentName());
+//c1.drawSampleMetric(true, 50);
+
+c1.defaultWriteStyle = {textAlign: 'center', font: '40px arial', fillStyle: new Color('Blue')};
+c1.defaultDrawStyle = {fillStyle: new Color('Red', .8)};
+console.table(c1.defaultWriteStyle);
 const text = new Text(new Coord(100, 50), 'TEST').render(true);
 const line = new Line(new Coord(200, 50), new Coord(450, 200)).render(true);
 const triangle = new Triangle(new Coord(400, 50), new Coord(700, 100), new Coord(600, 200)).render(true);
@@ -27,8 +36,8 @@ rect.moveBy(50, 250);
 circle.moveBy(50, 250);
 path.moveBy(50, 250);
 
-c1.writeStyle = {textAlign: 'right', font: '50px Arial'};
-c1.drawStyle = {fillStyle: new Color('Green', .3)};
+c1.defaultWriteStyle = {textAlign: 'right', font: '50px Arial'};
+c1.defaultDrawStyle = {fillStyle: new Color('Green', .3)};
 
 text.render(true);
 line.render(true);

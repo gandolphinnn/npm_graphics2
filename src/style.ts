@@ -164,12 +164,15 @@ export type RGBA = {
 	alpha: number | null
 }
 
-export interface DrawStyle {
+export type DrawStyle = {
 	lineWidth?: number,
 	strokeStyle?: Style,
 	fillStyle?: Style
 }
-export interface WriteStyle extends DrawStyle {
+export type WriteStyle = {
+	lineWidth?: number,
+	strokeStyle?: Style,
+	fillStyle?: Style
 	font?: Font,
 	/**
 	 * @example "left" means the center is just to the left of the text
@@ -234,6 +237,13 @@ export function parseRGBA(str: string) {
  */
 export function getStringIfColor(style: Style) {
 	return style instanceof Color? style.rgbaStr : style
+}
+export function styleCoalesce<T = DrawStyle | WriteStyle>(currentStyle: T, newStyle: T) {
+	console.log('curr', currentStyle);
+	console.log('new', newStyle);
+	const result: typeof currentStyle = { ...currentStyle };
+
+	return result;
 }
 //#endregion
 

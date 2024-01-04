@@ -142,10 +142,10 @@ export class Text extends CnvElement {
 	get customStyle() { return this._customStyle }
 	set customStyle(customStyle: WriteStyle | null) { this._customStyle = coalesce(customStyle, {} as WriteStyle) }
 
-	constructor(center: Coord, content: string, customStyle?: WriteStyle) {
+	constructor(center: Coord, content: string) {
 		super(center, RenderAction.Both);
 		this.content = content;
-		this.customStyle = customStyle;
+		this.customStyle = null;
 	}
 	setStyle(customStyle: WriteStyle | null) {
 		this.customStyle = customStyle;
@@ -451,9 +451,6 @@ export class MainCanvas extends Singleton {
 		this.ctx.fillStyle		= getStringIfColor(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
 	}
 	applyCustomWriteStyle(writeStyle: WriteStyle) {
-		console.log(writeStyle.fillStyle);
-		console.log(this._defaultWriteStyle.fillStyle);
-		console.log(coalesce(writeStyle.fillStyle,	this._defaultWriteStyle.fillStyle));
 		this.ctx.lineWidth		= coalesce(writeStyle.lineWidth,	this._defaultWriteStyle.lineWidth),
 		this.ctx.strokeStyle	= getStringIfColor(coalesce(writeStyle.strokeStyle,	this._defaultWriteStyle.strokeStyle)),
 		this.ctx.fillStyle		= getStringIfColor(coalesce(writeStyle.fillStyle,	this._defaultWriteStyle.fillStyle)),
@@ -509,7 +506,7 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(COORDS.sumXY(coord, -30, +3), unit.toString(), {textAlign: 'center'}).render()
+			new Text(COORDS.sumXY(coord, -30, +3), unit.toString()).setStyle(WRITESTYLE_DEFAULT).setAction(RenderAction.Fill).render()
 			new Line(coord, COORDS.sumXY(coord, unit, 0)).render(); 
 			COORDS.sumXY(coord, 0, 20);
 		});
@@ -519,12 +516,12 @@ export class MainCanvas extends Singleton {
 		if(clean) this.clean()
 		this.ctx.lineWidth = 1;
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
-			new Line(new Coord(x, 0), new Coord(x, this.cnv.height)).render()
-			new Text(new Coord(x-5, 10), x.toString(), {textAlign: 'right'}).render()
+			new Line(new Coord(x, 0), new Coord(x, this.cnv.height)).render();
+			new Text(new Coord(x-5, 10), x.toString()).setStyle(WRITESTYLE_DEFAULT).setStyle({textAlign: 'right'}).setAction(RenderAction.Fill).render();
 		}
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
-			new Line(new Coord(0, y), new Coord(this.cnv.width, y)).render()
-			new Text(new Coord(5, y-5), y.toString(), {textAlign: 'left'}).render()
+			new Line(new Coord(0, y), new Coord(this.cnv.width, y)).render();
+			new Text(new Coord(5, y-5), y.toString()).setStyle(WRITESTYLE_DEFAULT).setStyle({textAlign: 'left'}).setAction(RenderAction.Fill).render();
 		}
 		new Circle(this.center, 5).render();
 	}

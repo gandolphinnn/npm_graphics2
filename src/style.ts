@@ -229,9 +229,11 @@ export function parseRGBA(str: string) {
 	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);
 	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha)})
 }
+/**
+ * If the style object is a Color, return its rgbaStr, otherwise return the object
+ */
 export function getStringIfColor(style: Style) {
-	//todo console.log(typeof style);
-	return ''
+	return style instanceof Color? style.rgbaStr : style
 }
 //#endregion
 

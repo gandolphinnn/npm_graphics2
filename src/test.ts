@@ -1,5 +1,5 @@
 import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle } from './index.js';
-import { test, parentName } from '@gandolphinnn/utils';
+import { test } from '@gandolphinnn/utils';
 const c1 = MainCanvas.get;
 
 test('rgbParse INVALID', parseRGBA(''), null);

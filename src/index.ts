@@ -433,9 +433,6 @@ export class MainCanvas extends Singleton {
 	get defaultWriteStyle() { return this._defaultWriteStyle }
 	set defaultWriteStyle(defaultWriteStyle: WriteStyle) {
 		this._defaultWriteStyle = {
-			lineWidth:		coalesce(defaultWriteStyle.lineWidth,	this._defaultWriteStyle.lineWidth),
-			strokeStyle:	coalesce(defaultWriteStyle.strokeStyle,	this._defaultWriteStyle.strokeStyle),
-			fillStyle:		coalesce(defaultWriteStyle.fillStyle,	this._defaultWriteStyle.fillStyle),
 			font:			coalesce(defaultWriteStyle.font,		this._defaultWriteStyle.font),
 			textAlign:		coalesce(defaultWriteStyle.textAlign,	this._defaultWriteStyle.textAlign)
 		}
@@ -475,9 +472,6 @@ export class MainCanvas extends Singleton {
 		this.ctx.fillStyle		= getStringIfColor(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
 	}
 	applyCustomWriteStyle(writeStyle: WriteStyle) {
-		this.ctx.lineWidth		= coalesce(writeStyle.lineWidth,	this._defaultWriteStyle.lineWidth),
-		this.ctx.strokeStyle	= getStringIfColor(coalesce(writeStyle.strokeStyle,	this._defaultWriteStyle.strokeStyle)),
-		this.ctx.fillStyle		= getStringIfColor(coalesce(writeStyle.fillStyle,	this._defaultWriteStyle.fillStyle)),
 		this.ctx.font			= coalesce(writeStyle.font,			this._defaultWriteStyle.font),
 		this.ctx.textAlign		= coalesce(writeStyle.textAlign,	this._defaultWriteStyle.textAlign)
 	}

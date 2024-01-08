@@ -1,4 +1,4 @@
-import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle, DrawStyle, WriteStyle, styleCoalesce, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './index.js';
+import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle, DrawStyle, WriteStyle, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './index.js';
 import { test } from '@gandolphinnn/utils';
 
 test('rgbParse INVALID', parseRGBA(''), null);
@@ -9,15 +9,11 @@ test('rgbParse HEX2', parseRGBA('#abcdef'), {red: 171, green: 205, blue: 239, al
 
 const black = new Color('Black');
 const red = new Color('Red');
-const currWS: WriteStyle		= {fillStyle: black, font: '20px Arial', lineWidth: 2, strokeStyle: black, textAlign: 'left'};
-const newWS: WriteStyle			= {					 font: '30px Arial', lineWidth: 3, strokeStyle: red, textAlign: 'right'};
-const expectedWS: WriteStyle	= {fillStyle: black, font: '30px Arial', lineWidth: 3, strokeStyle: red, textAlign: 'left'};
-test('styleCoalesce', styleCoalesce(WRITESTYLE_DEFAULT, DRAWSTYLE_DEFAULT), expectedWS)
 //{"fillStyle":{"red":0,"green":0,"blue":0,"alpha":1},"font":"20px Arial","lineWidth":2,"strokeStyle":{"red":0,"green":0,"blue":0,"alpha":1},"textAlign":"left"}
 //{"red":0,"green":0,"blue":0,"alpha":1},"font":"30px Arial","lineWidth":3,"strokeStyle":{"red":255,"green":0,"blue":0,"alpha":1},"textAlign":"left"}
 
 const c1 = MainCanvas.get;
-c1.defaultWriteStyle = {textAlign: 'center', font: '40px arial', fillStyle: new Color('Blue')};
+c1.defaultWriteStyle = {textAlign: 'center', font: '40px arial'};
 c1.defaultDrawStyle = {fillStyle: new Color('Red', .8)};
 /*
 c1.drawSampleMetric(true, 50);

@@ -154,7 +154,7 @@ export const RGBA_PATTERN: RegExp = /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(
 /**
  * @example "10px Arial"
 */
-export type Style = Color | CanvasGradient | CanvasPattern;
+export type SubStyle = Color | CanvasGradient | CanvasPattern;
 export type Font = `${number}px ${string}`;
 export type ColorName = 'AliceBlue' | 'AntiqueWhite' | 'Aqua' | 'Aquamarine' | 'Azure' | 'Beige' | 'Bisque' | 'Black' | 'BlanchedAlmond' | 'Blue' | 'BlueViolet' | 'Brown' | 'BurlyWood' | 'CadetBlue' | 'Chartreuse' | 'Chocolate' | 'Coral' | 'CornflowerBlue' | 'Cornsilk' | 'Crimson' | 'Cyan' | 'DarkBlue' | 'DarkCyan' | 'DarkGoldenRod' | 'DarkGrey' | 'DarkGreen' | 'DarkKhaki' | 'DarkMagenta' | 'DarkOliveGreen' | 'DarkOrange' | 'DarkOrchid' | 'DarkRed' | 'DarkSalmon' | 'DarkSeaGreen' | 'DarkSlateBlue' | 'DarkSlateGrey' | 'DarkTurquoise' | 'DarkViolet' | 'DeepPink' | 'DeepSkyBlue' | 'DimGrey' | 'DodgerBlue' | 'FireBrick' | 'FloralWhite' | 'ForestGreen' | 'Fuchsia' | 'Gainsboro' | 'GhostWhite' | 'Gold' | 'GoldenRod' | 'Grey' | 'Green' | 'GreenYellow' | 'HoneyDew' | 'HotPink' | 'IndianRed' | 'Indigo' | 'Ivory' | 'Khaki' | 'Lavender' | 'LavenderBlush' | 'LawnGreen' | 'LemonChiffon' | 'LightBlue' | 'LightCoral' | 'LightCyan' | 'LightGoldenRodYellow' | 'LightGrey' | 'LightGreen' | 'LightPink' | 'LightSalmon' | 'LightSeaGreen' | 'LightSkyBlue' | 'LightSlateGrey' | 'LightSteelBlue' | 'LightYellow' | 'Lime' | 'LimeGreen' | 'Linen' | 'Magenta' | 'Maroon' | 'MediumAquaMarine' | 'MediumBlue' | 'MediumOrchid' | 'MediumPurple' | 'MediumSeaGreen' | 'MediumSlateBlue' | 'MediumSpringGreen' | 'MediumTurquoise' | 'MediumVioletRed' | 'MidnightBlue' | 'MintCream' | 'MistyRose' | 'Moccasin' | 'NavajoWhite' | 'Navy' | 'OldLace' | 'Olive' | 'OliveDrab' | 'Orange' | 'OrangeRed' | 'Orchid' | 'PaleGoldenRod' | 'PaleGreen' | 'PaleTurquoise' | 'PaleVioletRed' | 'PapayaWhip' | 'PeachPuff' | 'Peru' | 'Pink' | 'Plum' | 'PowderBlue' | 'Purple' | 'RebeccaPurple' | 'Red' | 'RosyBrown' | 'RoyalBlue' | 'SaddleBrown' | 'Salmon' | 'SandyBrown' | 'SeaGreen' | 'SeaShell' | 'Sienna' | 'Silver' | 'SkyBlue' | 'SlateBlue' | 'SlateGrey' | 'Snow' | 'SpringGreen' | 'SteelBlue' | 'Tan' | 'Teal' | 'Thistle' | 'Tomato' | 'Turquoise' | 'Violet' | 'Wheat' | 'White' | 'WhiteSmoke' | 'Yellow' | 'YellowGreen'
 export type RGBA = {
@@ -163,26 +163,35 @@ export type RGBA = {
 	blue: number
 	alpha: number | null
 }
-
-export type DrawStyle = {
-	lineWidth?: number,
-	strokeStyle?: Style,
-	fillStyle?: Style
+/**
+ * undefined is for not specified values
+ */
+export interface DrawStyle { //? interface? type?
+	lineWidth?: number
+	strokeStyle?: SubStyle,
+	fillStyle?: SubStyle
 }
-export type WriteStyle = {
-	lineWidth?: number,
-	strokeStyle?: Style,
-	fillStyle?: Style
-	font?: Font,
+export interface WriteStyle { //? interface? type?
 	/**
 	 * @example "left" means the center is just to the left of the text
 	*/
 	textAlign?: CanvasTextAlign
+	font?: Font
 }
+//? WS and DS are now separated. Maincanvas and Text will both require a drawstyle and a write style dedicated only to write text
+//? (So Maincanvas will have 2 different drawstyle objs, 1 for drawing and 1 for writing)
+	//? NOTE: or maybe WriteStyle could contain a drawStlye obj inside itself like this:
+	/*interface WriteStyle {
+		drawstyle: DrawStyle,
+		textAlign?: CanvasTextAlign,
+		font?: Font
+	}*/
+//todo add the method coalesce() to WS and DS
 //#endregion
 
 //#region Color
 export class Color {
+	//todo (?) static-only methods for creation
 	red: number;
 	green: number;
 	blue: number;
@@ -191,6 +200,7 @@ export class Color {
 	get hexStr() { return `#${decToHex(this.red)}${decToHex(this.green)}${decToHex(this.blue)}` }
 	get rgbaStr() { return `rgba(${this.red},${this.green},${this.blue},${this.alpha})` }
 	get rgbaObj() { return {red: this.red, green: this.green, blue: this.blue, alpha: this.alpha} as RGBA }
+	get copy() { return new Color().setRGBA(this.rgbaObj) }
 
 	constructor(colorName?: ColorName, alpha = 1) {
 		if (colorName) this.setName(colorName, alpha);
@@ -235,15 +245,8 @@ export function parseRGBA(str: string) {
 /**
  * If the style object is a Color, return its rgbaStr, otherwise return the object
  */
-export function getStringIfColor(style: Style) {
+export function getStringIfColor(style: SubStyle) {
 	return style instanceof Color? style.rgbaStr : style
-}
-export function styleCoalesce<T = DrawStyle | WriteStyle>(currentStyle: T, newStyle: T) {
-	console.log('curr', currentStyle);
-	console.log('new', newStyle);
-	const result: typeof currentStyle = { ...currentStyle };
-
-	return result;
 }
 //#endregion
 
@@ -251,6 +254,6 @@ export function styleCoalesce<T = DrawStyle | WriteStyle>(currentStyle: T, newSt
 const black = new Color('Black'); //! do not export
 export const DRAWSTYLE_DEFAULT: DrawStyle =		{ lineWidth: 1,		strokeStyle: black,	fillStyle: black }
 export const DRAWSTYLE_EMPTY: DrawStyle =		{ lineWidth: null,	strokeStyle: null,	fillStyle: null }
-export const WRITESTYLE_DEFAULT: WriteStyle =	{ lineWidth: 1,		strokeStyle: black,	fillStyle: black,	font: '10px Arial',	textAlign: 'center' }
-export const WRITESTYLE_EMPTY: WriteStyle =		{ lineWidth: null,	strokeStyle: null,	fillStyle: null,	font: null,			textAlign: null }
+export const WRITESTYLE_DEFAULT: WriteStyle =	{ font: '10px Arial',	textAlign: 'center' }
+export const WRITESTYLE_EMPTY: WriteStyle =		{ font: null,			textAlign: null }
 //#endregion

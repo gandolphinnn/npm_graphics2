@@ -1,4 +1,5 @@
 import { clamp, coalesce, hexToDec, decToHex } from '@gandolphinnn/utils';
+import { MainCanvas } from './index.js';
 
 //#region Constants 1
 export const COLORNAME_RGB: Record<ColorName, RGBA> = {
@@ -163,30 +164,6 @@ export type RGBA = {
 	blue: number
 	alpha: number | null
 }
-/**
- * undefined is for not specified values
- */
-export interface DrawStyle { //? interface? type?
-	lineWidth?: number
-	strokeStyle?: SubStyle,
-	fillStyle?: SubStyle
-}
-export interface WriteStyle { //? interface? type?
-	/**
-	 * @example "left" means the center is just to the left of the text
-	*/
-	textAlign?: CanvasTextAlign
-	font?: Font
-}
-//? WS and DS are now separated. Maincanvas and Text will both require a drawstyle and a write style dedicated only to write text
-//? (So Maincanvas will have 2 different drawstyle objs, 1 for drawing and 1 for writing)
-	//? NOTE: or maybe WriteStyle could contain a drawStlye obj inside itself like this:
-	/*interface WriteStyle {
-		drawstyle: DrawStyle,
-		textAlign?: CanvasTextAlign,
-		font?: Font
-	}*/
-//todo add the method coalesce() to WS and DS
 //#endregion
 
 //#region Color
@@ -229,6 +206,52 @@ export class Color {
 }
 //#endregion
 
+//#region Style
+export class Style {
+	fillStyle?: SubStyle
+	strokeStyle?: SubStyle
+	lineWidth?: number
+	/**
+	 * @example "left" means the center is just to the left of the text
+	*/
+	textAlign?: CanvasTextAlign
+	font?: Font
+	constructor(fillStyle?: SubStyle, strokeStyle?: SubStyle, lineWidth?: number, textAlign?: CanvasTextAlign, font?: Font) {
+		this.fillStyle = fillStyle;
+		this.strokeStyle = strokeStyle;
+		this.lineWidth = lineWidth;
+		this.textAlign = textAlign;
+		this.font = font;
+	}
+	get copy() { return new Style(this.fillStyle, this.strokeStyle, this.lineWidth, this.textAlign, this.font) }
+	/**
+	 * Apply this style to the MainCanvas ctx
+	 */
+	ctxApply() {
+		const ctx = MainCanvas.get.ctx;
+		ctx.fillStyle = getStringIfColor(this.fillStyle);
+		ctx.strokeStyle = getStringIfColor(this.strokeStyle);
+		ctx.lineWidth = this.lineWidth;
+		ctx.textAlign = this.textAlign;
+		ctx.font = this.font;
+		return this;
+	}
+	/**
+	 * undefined is for not specified values
+	 * null is used to set to undefined
+	 */
+	coalesce(newStyle: Style, keepNulls = false) { //todo keepNulls
+		//? UNDEFINED -> this, NULL -> undefined, VALUE -> value
+		this.fillStyle		= (newStyle.fillStyle !== undefined)?	((newStyle.fillStyle !== null)?		newStyle.fillStyle		: undefined) : this.fillStyle;
+		this.strokeStyle	= (newStyle.strokeStyle !== undefined)?	((newStyle.strokeStyle !== null)?	newStyle.strokeStyle	: undefined) : this.strokeStyle;
+		this.lineWidth		= (newStyle.lineWidth !== undefined)?	((newStyle.lineWidth !== null)?		newStyle.lineWidth		: undefined) : this.lineWidth;
+		this.textAlign		= (newStyle.textAlign !== undefined)?	((newStyle.textAlign !== null)?		newStyle.textAlign		: undefined) : this.textAlign;
+		this.font			= (newStyle.font !== undefined)?		((newStyle.font !== null)?			newStyle.font			: undefined) : this.font;
+		return this;
+	}
+}
+//#endregion
+
 //#region Functions
 export function clampRGBA(rgba: RGBA) {
 	return {red: clamp(rgba.red, 0, 255), green: clamp(rgba.green, 0, 255), blue: clamp(rgba.blue, 0, 255), alpha: clamp(rgba.alpha, 0, 1)} as RGBA;
@@ -251,9 +274,7 @@ export function getStringIfColor(style: SubStyle) {
 //#endregion
 
 //#region Constants 2
-const black = new Color('Black'); //! do not export
-export const DRAWSTYLE_DEFAULT: DrawStyle =		{ lineWidth: 1,		strokeStyle: black,	fillStyle: black }
-export const DRAWSTYLE_EMPTY: DrawStyle =		{ lineWidth: null,	strokeStyle: null,	fillStyle: null }
-export const WRITESTYLE_DEFAULT: WriteStyle =	{ font: '10px Arial',	textAlign: 'center' }
-export const WRITESTYLE_EMPTY: WriteStyle =		{ font: null,			textAlign: null }
+export const COLOR_DEFAULT	= new Color('Black');
+export const STYLE_DEFAULT	= new Style(COLOR_DEFAULT, COLOR_DEFAULT, 1, 'center', '10px Arial');
+export const STYLE_EMPTY	= new Style(null, null, null, null, null);
 //#endregion

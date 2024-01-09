@@ -1,10 +1,12 @@
 import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { DrawStyle, WriteStyle, Color, getStringIfColor, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './style.js';
+import { Style, Color, getStringIfColor, STYLE_DEFAULT, STYLE_EMPTY } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
 
-//#region Enums, Types, Interfaces and Constants
+//#region Constants, Enums, Types, Interfaces
+export const IMG_ZINDEX_DEFAULT = 100;
+export const DRAWPOINTS_RADIUS = 3;
 export interface Component {} //? This will be useful later, in rigid2 and game2
 export enum RenderAction {
 	None, Stroke, Fill, Both
@@ -20,8 +22,6 @@ export type Size = {
 	width: number;
 	height: number;
 }
-export const IMG_ZINDEX_DEFAULT = 100;
-export const DRAWPOINTS_RADIUS = 3;
 //#endregion
 
 //#region Classes
@@ -156,7 +156,7 @@ export abstract class CnvElement {
 	abstract render(drawPoints: boolean): CnvElement;
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
-			MainCanvas.get.draw({strokeStyle: new Color('Black'), fillStyle: new Color('Black')}, () => {
+			MainCanvas.get.draw(STYLE_DEFAULT, () => {
 				new Circle(point, DRAWPOINTS_RADIUS).render();
 			});
 		});
@@ -164,16 +164,16 @@ export abstract class CnvElement {
 }
 export class Text extends CnvElement {
 	content: string;
-	private _customStyle: WriteStyle;
+	private _customStyle: Style;
 	get customStyle() { return this._customStyle }
-	set customStyle(customStyle: WriteStyle | null) { this._customStyle = coalesce(customStyle, {} as WriteStyle) }
+	set customStyle(customStyle: Style | null) { this._customStyle = coalesce(customStyle, {} as Style) }
 
 	constructor(center: Coord, content: string) {
 		super(center, RenderAction.Both);
 		this.content = content;
 		this.customStyle = null;
 	}
-	setStyle(customStyle: WriteStyle | null) {
+	setStyle(customStyle: Style | null) {
 		this.customStyle = customStyle;
 		return this;
 	}
@@ -207,15 +207,15 @@ export class Text extends CnvElement {
 	}
 }*/
 export abstract class CnvDrawing extends CnvElement {
-	private _customStyle: DrawStyle;
+	private _customStyle: Style = STYLE_EMPTY;
 	get customStyle() { return this._customStyle }
-	set customStyle(customStyle: DrawStyle | null) { this._customStyle = coalesce(customStyle, {lineWidth: null, stroke: null, fill: null}) }
+	set customStyle(customStyle: Style | null) { this._customStyle = coalesce(customStyle, {lineWidth: null, stroke: null, fill: null}) }
 
 	constructor(action: RenderAction, center: Coord) {
 		super(center, action);
 		this.customStyle = null;
 	}
-	setStyle(customStyle: DrawStyle | null) {
+	setStyle(customStyle: Style | null) {
 		this.customStyle = customStyle;
 		return this;
 	}
@@ -414,8 +414,8 @@ export class MainCanvas extends Singleton {
 
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
-	private _defaultDrawStyle: DrawStyle;
-	private _defaultWriteStyle: WriteStyle;
+	private _defaultDrawStyle: Style;
+	private _defaultWriteStyle: Style;
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
 
@@ -423,19 +423,11 @@ export class MainCanvas extends Singleton {
 	set color(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
 
 	get defaultDrawStyle() { return this._defaultDrawStyle }
-	set defaultDrawStyle(defaultDrawStyle: DrawStyle) {
-		this._defaultDrawStyle = {
-			lineWidth:		coalesce(defaultDrawStyle.lineWidth,	this._defaultDrawStyle.lineWidth),
-			strokeStyle:	coalesce(defaultDrawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle),
-			fillStyle:		coalesce(defaultDrawStyle.fillStyle,	this._defaultDrawStyle.fillStyle)
-		}
+	set defaultDrawStyle(defaultDrawStyle: Style) {
 	}
 	get defaultWriteStyle() { return this._defaultWriteStyle }
-	set defaultWriteStyle(defaultWriteStyle: WriteStyle) {
-		this._defaultWriteStyle = {
-			font:			coalesce(defaultWriteStyle.font,		this._defaultWriteStyle.font),
-			textAlign:		coalesce(defaultWriteStyle.textAlign,	this._defaultWriteStyle.textAlign)
-		}
+	set defaultWriteStyle(defaultWriteStyle: Style) {
+		
 	}
 
 	private constructor() {
@@ -466,23 +458,23 @@ export class MainCanvas extends Singleton {
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}
-	applyCustomDrawStyle(drawStyle: DrawStyle) {
+	applyCustomDrawStyle(drawStyle: Style) {
 		this.ctx.lineWidth		= coalesce(drawStyle.lineWidth,		this._defaultDrawStyle.lineWidth),
 		this.ctx.strokeStyle	= getStringIfColor(coalesce(drawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle)),
 		this.ctx.fillStyle		= getStringIfColor(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
 	}
-	applyCustomWriteStyle(writeStyle: WriteStyle) {
+	applyCustomWriteStyle(writeStyle: Style) {
 		this.ctx.font			= coalesce(writeStyle.font,			this._defaultWriteStyle.font),
 		this.ctx.textAlign		= coalesce(writeStyle.textAlign,	this._defaultWriteStyle.textAlign)
 	}
-	draw(drawStyle: DrawStyle, renderCallBack: Function) {
+	draw(drawStyle: Style, renderCallBack: Function) {
 		this.ctx.save();
 		this.applyCustomDrawStyle(drawStyle);
 		this.ctx.beginPath();
 		renderCallBack();
 		this.ctx.restore();
 	}
-	write(writeStyle: WriteStyle, renderCallBack: Function) {
+	write(writeStyle: Style, renderCallBack: Function) {
 		this.ctx.save();
 		this.applyCustomWriteStyle(writeStyle);
 		renderCallBack();

@@ -216,6 +216,7 @@ export class Style {
 	*/
 	textAlign?: CanvasTextAlign
 	font?: Font
+	get copy() { return new Style(this.fillStyle, this.strokeStyle, this.lineWidth, this.textAlign, this.font) }
 	constructor(fillStyle?: SubStyle, strokeStyle?: SubStyle, lineWidth?: number, textAlign?: CanvasTextAlign, font?: Font) {
 		this.fillStyle = fillStyle;
 		this.strokeStyle = strokeStyle;
@@ -223,7 +224,48 @@ export class Style {
 		this.textAlign = textAlign;
 		this.font = font;
 	}
-	get copy() { return new Style(this.fillStyle, this.strokeStyle, this.lineWidth, this.textAlign, this.font) }
+	/**
+	 * undefined is for not specified values
+	 * null is used to set to undefined
+	 */
+	private coalesceProperty(currVal: any, newVal: any, keepNulls: boolean) {
+		switch (newVal) {
+			case undefined:
+				return currVal;
+			case null:
+				return keepNulls? null : undefined;
+			default: newVal;
+				break;
+		}
+	}
+	setFillStyle(newFillStyle: SubStyle, keepNulls = false) {
+		this.fillStyle = this.coalesceProperty(this.fillStyle, newFillStyle, keepNulls);
+		return this;
+	}
+	setStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
+		this.strokeStyle = this.coalesceProperty(this.strokeStyle, newStrokeStyle, keepNulls);
+		return this;
+	}
+	setLineWidth(newLineWidth: number, keepNulls = false) {
+		this.lineWidth = this.coalesceProperty(this.lineWidth, newLineWidth, keepNulls);
+		return this;
+	}
+	setTextAlign(newTextAlign: CanvasTextAlign, keepNulls = false) {
+		this.textAlign = this.coalesceProperty(this.textAlign, newTextAlign, keepNulls);
+		return this;
+	}
+	setFont(newFont: Font, keepNulls = false) {
+		this.font = this.coalesceProperty(this.font, newFont, keepNulls);
+		return this;
+	}
+	coalesceWith(newStyle: Style, keepNulls = false) {
+		this.setFillStyle(newStyle.fillStyle, keepNulls);
+		this.setStrokeStyle(newStyle.strokeStyle, keepNulls);
+		this.setLineWidth(newStyle.lineWidth, keepNulls);
+		this.setTextAlign(newStyle.textAlign, keepNulls);
+		this.setFont(newStyle.font, keepNulls);
+		return this;
+	}
 	/**
 	 * Apply this style to the MainCanvas ctx
 	 */
@@ -234,19 +276,6 @@ export class Style {
 		ctx.lineWidth = this.lineWidth;
 		ctx.textAlign = this.textAlign;
 		ctx.font = this.font;
-		return this;
-	}
-	/**
-	 * undefined is for not specified values
-	 * null is used to set to undefined
-	 */
-	coalesce(newStyle: Style, keepNulls = false) { //todo keepNulls
-		//? UNDEFINED -> this, NULL -> undefined, VALUE -> value
-		this.fillStyle		= (newStyle.fillStyle !== undefined)?	((newStyle.fillStyle !== null)?		newStyle.fillStyle		: undefined) : this.fillStyle;
-		this.strokeStyle	= (newStyle.strokeStyle !== undefined)?	((newStyle.strokeStyle !== null)?	newStyle.strokeStyle	: undefined) : this.strokeStyle;
-		this.lineWidth		= (newStyle.lineWidth !== undefined)?	((newStyle.lineWidth !== null)?		newStyle.lineWidth		: undefined) : this.lineWidth;
-		this.textAlign		= (newStyle.textAlign !== undefined)?	((newStyle.textAlign !== null)?		newStyle.textAlign		: undefined) : this.textAlign;
-		this.font			= (newStyle.font !== undefined)?		((newStyle.font !== null)?			newStyle.font			: undefined) : this.font;
 		return this;
 	}
 }

@@ -443,8 +443,8 @@ export class MainCanvas extends Singleton {
 		body.appendChild(this.cnv);
 		this.ctx = this.cnv.getContext('2d')!;
 
-		this._defaultDrawStyle = DRAWSTYLE_DEFAULT;
-		this._defaultWriteStyle = WRITESTYLE_DEFAULT;
+		this._defaultDrawStyle = STYLE_DEFAULT;
+		this._defaultWriteStyle = STYLE_DEFAULT;
 		
 		console.log('Main canvas set');
 	}
@@ -507,24 +507,37 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(Coord.sumXY(coord, -30, +3), unit.toString()).setStyle(WRITESTYLE_DEFAULT).setAction(RenderAction.Fill).render()
+			new Text(Coord.sumXY(coord, -30, +3), unit.toString()).setStyle(STYLE_DEFAULT).setAction(RenderAction.Fill).render()
 			new Line(coord, Coord.sumXY(coord, unit, 0)).render(); 
 			Coord.sumXY(coord, 0, 20);
 		});
 	}
 	drawSampleMetric(clean = false, scale: number = 50) {
+		//todo: so complicated to do such a shitty simple thing like this. Fix this garbage
 		scale = clamp(scale, 25, Infinity);
-		if(clean) this.clean()
-		this.ctx.lineWidth = 1;
+		if(clean)
+			this.clean();
+
+		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height)).setStyle(STYLE_DEFAULT.setLineWidth(1))
+		const text = new Text(new Coord(0, 10), '').setStyle(STYLE_DEFAULT.setTextAlign('left'))
+		console.log(text);
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
-			new Line(new Coord(x, 0), new Coord(x, this.cnv.height)).render();
-			new Text(new Coord(x-5, 10), x.toString()).setStyle(WRITESTYLE_DEFAULT).setStyle({textAlign: 'right'}).setAction(RenderAction.Fill).render();
+			line.moveBy(scale, 0)
+				.render();
+			text.center = new Coord(x+3, 10);
+			text.content = x.toString()
+			text.render();
 		}
+		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)]
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
-			new Line(new Coord(0, y), new Coord(this.cnv.width, y)).render();
-			new Text(new Coord(5, y-5), y.toString()).setStyle(WRITESTYLE_DEFAULT).setStyle({textAlign: 'left'}).setAction(RenderAction.Fill).render();
+			line.moveBy(0, scale)
+				.render();
+			text.center = new Coord(5, y-5);
+			text.content = y.toString()
+			text.render();
 		}
 		new Circle(this.center, 5).render();
+		new Circle(new Coord(50, 50), 5).render();
 	}
 	//#endregion
 }

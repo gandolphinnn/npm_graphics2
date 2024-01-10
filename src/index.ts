@@ -164,18 +164,12 @@ export abstract class CnvElement {
 }
 export class Text extends CnvElement {
 	content: string;
-	private _customStyle: Style;
-	get customStyle() { return this._customStyle }
-	set customStyle(customStyle: Style | null) { this._customStyle = coalesce(customStyle, {} as Style) }
+	customStyle: Style;
 
 	constructor(center: Coord, content: string) {
 		super(center, RenderAction.Both);
 		this.content = content;
 		this.customStyle = null;
-	}
-	setStyle(customStyle: Style | null) {
-		this.customStyle = customStyle;
-		return this;
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.write(this.customStyle, () => {
@@ -190,7 +184,7 @@ export class Text extends CnvElement {
 		return this;
 	}
 }
-/*export class Img extends CnvElement {
+/*export class Img extends CnvElement { //todo whole class
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
@@ -201,23 +195,16 @@ export class Text extends CnvElement {
 		this.size = size;
 	}
 	render(drawPoints = false) {
-		//todo
 		//drawPoints? this.drawPoints() : null;
 		return this;
 	}
 }*/
-export abstract class CnvDrawing extends CnvElement {
-	private _customStyle: Style = STYLE_EMPTY;
-	get customStyle() { return this._customStyle }
-	set customStyle(customStyle: Style | null) { this._customStyle = coalesce(customStyle, {lineWidth: null, stroke: null, fill: null}) }
+export abstract class CnvDrawing extends CnvElement { //todo add point rotation method
+	customStyle: Style = STYLE_EMPTY;
 
 	constructor(action: RenderAction, center: Coord) {
 		super(center, action);
 		this.customStyle = null;
-	}
-	setStyle(customStyle: Style | null) {
-		this.customStyle = customStyle;
-		return this;
 	}
 }
 export class Line extends CnvDrawing {
@@ -303,7 +290,7 @@ export class Path extends CnvDrawing {
 		return this;
 	}
 }
-export class Triangle extends CnvDrawing {
+export class Triangle extends CnvDrawing { //todo remove this. For shapes, use Path
 	points: [Coord, Coord, Coord];
 
 	get size() { return Coord.size(...this.points) }
@@ -332,7 +319,7 @@ export class Triangle extends CnvDrawing {
 		return this;
 	}
 }
-export class Rect extends CnvDrawing {
+export class SizedRect extends CnvDrawing {
 	size: Size;
 
 	get points() {
@@ -385,7 +372,7 @@ export class Arc extends CnvDrawing {
 	start: Angle;
 	end: Angle;
 	rotationDirection: Rotation;
-	cutByCenter: boolean;
+	cutByCenter: boolean; //todo not implemented in render() yet
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
@@ -507,7 +494,7 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(Coord.sumXY(coord, -30, +3), unit.toString()).setStyle(STYLE_DEFAULT).setAction(RenderAction.Fill).render()
+			new Text(Coord.sumXY(coord, -30, +3), unit.toString())//.setStyle(STYLE_DEFAULT).setAction(RenderAction.Fill).render()
 			new Line(coord, Coord.sumXY(coord, unit, 0)).render(); 
 			Coord.sumXY(coord, 0, 20);
 		});
@@ -518,8 +505,8 @@ export class MainCanvas extends Singleton {
 		if(clean)
 			this.clean();
 
-		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height)).setStyle(STYLE_DEFAULT.setLineWidth(1))
-		const text = new Text(new Coord(0, 10), '').setStyle(STYLE_DEFAULT.setTextAlign('left'))
+		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height))//.setStyle(STYLE_DEFAULT.setLineWidth(1))
+		const text = new Text(new Coord(0, 10), '')//.setStyle(STYLE_DEFAULT.setTextAlign('left'))
 		console.log(text);
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			line.moveBy(scale, 0)

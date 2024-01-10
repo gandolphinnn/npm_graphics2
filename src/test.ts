@@ -1,4 +1,4 @@
-import { MainCanvas, Coord, Color, Text, Line, Triangle, Rect, Path, parseRGBA, RGBA, Circle, DrawStyle, WriteStyle, DRAWSTYLE_DEFAULT, WRITESTYLE_DEFAULT } from './index.js';
+import { MainCanvas, Coord, Color, Text, Line, Triangle, Path, parseRGBA, RGBA, Circle } from './index.js';
 import { test } from '@gandolphinnn/utils';
 
 test('rgbParse INVALID', parseRGBA(''), null);

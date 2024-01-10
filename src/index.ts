@@ -1,5 +1,5 @@
 import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { Style, Color, getStringIfColor, STYLE_DEFAULT, STYLE_EMPTY } from './style.js';
+import { Style, Color, getSubStyleValue, STYLE_DEFAULT, STYLE_EMPTY } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
@@ -406,7 +406,7 @@ export class MainCanvas extends Singleton {
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
 
-	get color() { return new Color().setStr(this.cnv.style.backgroundColor)	}
+	//get color() { return new Color().byStr(this.cnv.style.backgroundColor)	}
 	set color(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
 
 	get defaultDrawStyle() { return this._defaultDrawStyle }
@@ -447,8 +447,8 @@ export class MainCanvas extends Singleton {
 	}
 	applyCustomDrawStyle(drawStyle: Style) {
 		this.ctx.lineWidth		= coalesce(drawStyle.lineWidth,		this._defaultDrawStyle.lineWidth),
-		this.ctx.strokeStyle	= getStringIfColor(coalesce(drawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle)),
-		this.ctx.fillStyle		= getStringIfColor(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
+		this.ctx.strokeStyle	= getSubStyleValue(coalesce(drawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle)),
+		this.ctx.fillStyle		= getSubStyleValue(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
 	}
 	applyCustomWriteStyle(writeStyle: Style) {
 		this.ctx.font			= coalesce(writeStyle.font,			this._defaultWriteStyle.font),

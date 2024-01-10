@@ -155,8 +155,8 @@ export const RGBA_PATTERN: RegExp = /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(
 /**
  * @example "10px Arial"
 */
-export type SubStyle = Color | CanvasGradient | CanvasPattern;
 export type Font = `${number}px ${string}`;
+export type SubStyle = Color | CanvasGradient | CanvasPattern;
 export type ColorName = 'AliceBlue' | 'AntiqueWhite' | 'Aqua' | 'Aquamarine' | 'Azure' | 'Beige' | 'Bisque' | 'Black' | 'BlanchedAlmond' | 'Blue' | 'BlueViolet' | 'Brown' | 'BurlyWood' | 'CadetBlue' | 'Chartreuse' | 'Chocolate' | 'Coral' | 'CornflowerBlue' | 'Cornsilk' | 'Crimson' | 'Cyan' | 'DarkBlue' | 'DarkCyan' | 'DarkGoldenRod' | 'DarkGrey' | 'DarkGreen' | 'DarkKhaki' | 'DarkMagenta' | 'DarkOliveGreen' | 'DarkOrange' | 'DarkOrchid' | 'DarkRed' | 'DarkSalmon' | 'DarkSeaGreen' | 'DarkSlateBlue' | 'DarkSlateGrey' | 'DarkTurquoise' | 'DarkViolet' | 'DeepPink' | 'DeepSkyBlue' | 'DimGrey' | 'DodgerBlue' | 'FireBrick' | 'FloralWhite' | 'ForestGreen' | 'Fuchsia' | 'Gainsboro' | 'GhostWhite' | 'Gold' | 'GoldenRod' | 'Grey' | 'Green' | 'GreenYellow' | 'HoneyDew' | 'HotPink' | 'IndianRed' | 'Indigo' | 'Ivory' | 'Khaki' | 'Lavender' | 'LavenderBlush' | 'LawnGreen' | 'LemonChiffon' | 'LightBlue' | 'LightCoral' | 'LightCyan' | 'LightGoldenRodYellow' | 'LightGrey' | 'LightGreen' | 'LightPink' | 'LightSalmon' | 'LightSeaGreen' | 'LightSkyBlue' | 'LightSlateGrey' | 'LightSteelBlue' | 'LightYellow' | 'Lime' | 'LimeGreen' | 'Linen' | 'Magenta' | 'Maroon' | 'MediumAquaMarine' | 'MediumBlue' | 'MediumOrchid' | 'MediumPurple' | 'MediumSeaGreen' | 'MediumSlateBlue' | 'MediumSpringGreen' | 'MediumTurquoise' | 'MediumVioletRed' | 'MidnightBlue' | 'MintCream' | 'MistyRose' | 'Moccasin' | 'NavajoWhite' | 'Navy' | 'OldLace' | 'Olive' | 'OliveDrab' | 'Orange' | 'OrangeRed' | 'Orchid' | 'PaleGoldenRod' | 'PaleGreen' | 'PaleTurquoise' | 'PaleVioletRed' | 'PapayaWhip' | 'PeachPuff' | 'Peru' | 'Pink' | 'Plum' | 'PowderBlue' | 'Purple' | 'RebeccaPurple' | 'Red' | 'RosyBrown' | 'RoyalBlue' | 'SaddleBrown' | 'Salmon' | 'SandyBrown' | 'SeaGreen' | 'SeaShell' | 'Sienna' | 'Silver' | 'SkyBlue' | 'SlateBlue' | 'SlateGrey' | 'Snow' | 'SpringGreen' | 'SteelBlue' | 'Tan' | 'Teal' | 'Thistle' | 'Tomato' | 'Turquoise' | 'Violet' | 'Wheat' | 'White' | 'WhiteSmoke' | 'Yellow' | 'YellowGreen'
 export type RGBA = {
 	red: number,
@@ -168,7 +168,6 @@ export type RGBA = {
 
 //#region Color
 export class Color {
-	//todo (?) static-only methods for creation
 	red: number;
 	green: number;
 	blue: number;
@@ -177,31 +176,26 @@ export class Color {
 	get hexStr() { return `#${decToHex(this.red)}${decToHex(this.green)}${decToHex(this.blue)}` }
 	get rgbaStr() { return `rgba(${this.red},${this.green},${this.blue},${this.alpha})` }
 	get rgbaObj() { return {red: this.red, green: this.green, blue: this.blue, alpha: this.alpha} as RGBA }
-	get copy() { return new Color().setRGBA(this.rgbaObj) }
 
-	constructor(colorName?: ColorName, alpha = 1) {
-		if (colorName) this.setName(colorName, alpha);
-	}
-	setName(colorName: ColorName, alpha?: number) {
-		this.setRGBA(COLORNAME_RGB[colorName], alpha);
-	}
-	setStr(string: string, alpha?: number) {
-		let rgba = parseRGBA(string);	
-		if (rgba) {
-			this.red = rgba.red;
-			this.green = rgba.green;
-			this.blue = rgba.blue;
-			this.alpha = coalesce(alpha, rgba.alpha, this.alpha);
-		}
-		return this;
-	}
-	setRGBA(rgba: RGBA, alpha?: number) {
-		rgba = clampRGBA(rgba);
+	private constructor(rgba: RGBA, alpha?: number) {
+		rgba.alpha = coalesce(alpha, rgba.alpha);
+		rgba = clampRGBA(rgba);		
 		this.red = rgba.red;
 		this.green = rgba.green;
 		this.blue = rgba.blue;
-		this.alpha = coalesce(alpha, rgba.alpha, this.alpha);
-		return this;
+		this.alpha = rgba.alpha;
+	}
+	static byName(colorName: ColorName, alpha?: number) {
+		return this.byObj(COLORNAME_RGB[colorName], alpha);
+	}
+	static byStr(string: string, alpha?: number) {
+		return this.byObj(parseRGBA(string), alpha);
+	}
+	static byValues(red: number, green: number, blue: number, alpha?: number) {
+		return this.byObj({red: red, green: green, blue: blue, alpha: alpha})
+	}
+	static byObj(rgba: RGBA, alpha?: number) {
+		return new Color(rgba, alpha)
 	}
 }
 //#endregion
@@ -216,7 +210,6 @@ export class Style {
 	*/
 	textAlign?: CanvasTextAlign
 	font?: Font
-	get copy() { return new Style(this.fillStyle, this.strokeStyle, this.lineWidth, this.textAlign, this.font) }
 	constructor(fillStyle?: SubStyle, strokeStyle?: SubStyle, lineWidth?: number, textAlign?: CanvasTextAlign, font?: Font) {
 		this.fillStyle = fillStyle;
 		this.strokeStyle = strokeStyle;
@@ -227,6 +220,7 @@ export class Style {
 	/**
 	 * undefined is for not specified values
 	 * null is used to set to undefined
+	 * keepNulls = true will set null to null
 	 */
 	private coalesceProperty(currVal: any, newVal: any, keepNulls: boolean) {
 		switch (newVal) {
@@ -238,6 +232,10 @@ export class Style {
 				break;
 		}
 	}
+	//todo: are these 5 methods actually useful????
+	//? YES -> keep them, make every property private and with a getter
+	//? NO -> remove them, user will deal with its value on its own
+	//? MAYBE -> keep them as a tool and keep every property public
 	setFillStyle(newFillStyle: SubStyle, keepNulls = false) {
 		this.fillStyle = this.coalesceProperty(this.fillStyle, newFillStyle, keepNulls);
 		return this;
@@ -258,7 +256,7 @@ export class Style {
 		this.font = this.coalesceProperty(this.font, newFont, keepNulls);
 		return this;
 	}
-	coalesceWith(newStyle: Style, keepNulls = false) {
+	setWith(newStyle: Style, keepNulls = false) {
 		this.setFillStyle(newStyle.fillStyle, keepNulls);
 		this.setStrokeStyle(newStyle.strokeStyle, keepNulls);
 		this.setLineWidth(newStyle.lineWidth, keepNulls);
@@ -271,8 +269,8 @@ export class Style {
 	 */
 	ctxApply() {
 		const ctx = MainCanvas.get.ctx;
-		ctx.fillStyle = getStringIfColor(this.fillStyle);
-		ctx.strokeStyle = getStringIfColor(this.strokeStyle);
+		ctx.fillStyle = getSubStyleValue(this.fillStyle);
+		ctx.strokeStyle = getSubStyleValue(this.strokeStyle);
 		ctx.lineWidth = this.lineWidth;
 		ctx.textAlign = this.textAlign;
 		ctx.font = this.font;
@@ -282,9 +280,15 @@ export class Style {
 //#endregion
 
 //#region Functions
+/**
+ * Clamp every RGBA color to [0,255] and aplha to [0, 1]
+ */
 export function clampRGBA(rgba: RGBA) {
 	return {red: clamp(rgba.red, 0, 255), green: clamp(rgba.green, 0, 255), blue: clamp(rgba.blue, 0, 255), alpha: clamp(rgba.alpha, 0, 1)} as RGBA;
 }
+/**
+ * Get the RGBA object from a string using multiple regex patterns. If invalid, return null
+ */
 export function parseRGBA(str: string) {
 	let match = coalesce(str.match(RGBA_PATTERN), str.match(RGB_PATTERN), str.match(HEX_LONG_PATTERN), str.match(HEX_SHORT_PATTERN)) as RegExpMatchArray;
 	
@@ -292,18 +296,18 @@ export function parseRGBA(str: string) {
 		return null;
 	}
 	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);
-	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha)})
+	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha, 1)})
 }
 /**
  * If the style object is a Color, return its rgbaStr, otherwise return the object
  */
-export function getStringIfColor(style: SubStyle) {
+export function getSubStyleValue(style: SubStyle) {
 	return style instanceof Color? style.rgbaStr : style
 }
 //#endregion
 
 //#region Constants 2
-export const COLOR_DEFAULT	= new Color('Black');
+export const COLOR_DEFAULT	= Color.byName('Black');
 export const STYLE_DEFAULT	= new Style(COLOR_DEFAULT, COLOR_DEFAULT, 1, 'center', '10px Arial');
-export const STYLE_EMPTY	= new Style(null, null, null, null, null);
+export const STYLE_EMPTY	= new Style();
 //#endregion

@@ -31,11 +31,12 @@ export type Size = {
 export class Coord {
 	x: number;
 	y: number;
-	get copy() { return new Coord(this.x, this.y) }
 	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;
 	}
+	copy() { return new Coord(this.x, this.y) }
+
 	//? sum every coordinate
 	static sum(...coords: Coord[]) {
 		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), new Coord(0, 0));
@@ -218,6 +219,9 @@ export class Line extends CnvDrawing {
 	get length() {
 		return Coord.distance(this.points[0], this.points[1]);
 	}
+	/**
+	 * return a NEW COORD based on the 2 points
+	 */
 	get center() { return Coord.center(...this.points)}
 	set center(center: Coord) {
 		const diff = Coord.size(this.center, center)
@@ -510,24 +514,31 @@ export class MainCanvas extends Singleton {
 			Coord.sumXY(coord, 0, 20);
 		});
 	}
-	drawSampleMetric(scale: number = 50) { //todo: so complicated to do such a shitty simple thing like this. Fix this garbage
+	drawSampleMetric(scale: number = 50) {
 		scale = clamp(scale, 25, Infinity);
 
-		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height))//.setStyle(STYLE_DEFAULT.setLineWidth(1))
-		const text = new Text(new Coord(0, 10), '')//.setStyle(STYLE_DEFAULT.setTextAlign('left'))
+		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height));
+		line.customStyle.setLineWidth(1);
+		const text = new Text(new Coord(0, 10), '');
+		text.customStyle.setTextAlign('right');
+		
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			line.center = new Coord(x, this.center.y);
 			line.render();
-			text.center = new Coord(x+3, 10);
-			text.content = x.toString()
+			text.center = new Coord(x-3, 10);
+			text.content = x.toString();
 			text.render();
 		}
-		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)]
+
+		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)];
+		text.customStyle.setTextAlign('left');
+
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			line.center = new Coord(this.center.x, y);
+			line.center.x =this.center.x
 			line.render();
 			text.center = new Coord(5, y-5);
-			text.content = y.toString()
+			text.content = y.toString();
 			text.render();
 		}
 		new Circle(this.center, 5).render();

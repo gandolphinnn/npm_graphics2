@@ -80,7 +80,7 @@ export class Style {
 			case null:
 				return keepNulls? null : undefined;
 			default: newVal;
-				break;
+				return newVal;
 		}
 	}
 	//todo: are these 5 methods actually useful????

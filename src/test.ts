@@ -11,11 +11,11 @@ test('Color.byName', Color.byName('AliceBlue'), {red: 240, green: 248, blue: 255
 
 const black = Color.byName('Black');
 const red = Color.byName('Red');
+const c1 = MainCanvas.get;
+c1.drawSampleMetric(50);
 //{"fillStyle":{"red":0,"green":0,"blue":0,"alpha":1},"font":"20px Arial","lineWidth":2,"strokeStyle":{"red":0,"green":0,"blue":0,"alpha":1},"textAlign":"left"}
 //{"red":0,"green":0,"blue":0,"alpha":1},"font":"30px Arial","lineWidth":3,"strokeStyle":{"red":255,"green":0,"blue":0,"alpha":1},"textAlign":"left"}
 
-//const c1 = MainCanvas.get;
-//c1.drawSampleMetric(true, 50);
 /*
 c1.defaultWriteStyle = {textAlign: 'center', font: '40px arial'};
 c1.defaultDrawStyle = {fillStyle: Color.byName('Red', .8)};

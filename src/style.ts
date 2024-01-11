@@ -73,7 +73,7 @@ export class Style {
 	 * null is used to set to undefined
 	 * keepNulls = true will set null to null
 	 */
-	private coalesceProperty(currVal: any, newVal: any, keepNulls: boolean) {
+	private setProperty(currVal: any, newVal: any, keepNulls: boolean) {
 		switch (newVal) {
 			case undefined:
 				return currVal;
@@ -88,23 +88,23 @@ export class Style {
 	//? NO -> remove them, user will deal with its value on its own
 	//? MAYBE -> keep them as a tool and keep every property public
 	setFillStyle(newFillStyle: SubStyle, keepNulls = false) {
-		this.fillStyle = this.coalesceProperty(this.fillStyle, newFillStyle, keepNulls);
+		this.fillStyle = this.setProperty(this.fillStyle, newFillStyle, keepNulls);
 		return this;
 	}
 	setStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
-		this.strokeStyle = this.coalesceProperty(this.strokeStyle, newStrokeStyle, keepNulls);
+		this.strokeStyle = this.setProperty(this.strokeStyle, newStrokeStyle, keepNulls);
 		return this;
 	}
 	setLineWidth(newLineWidth: number, keepNulls = false) {
-		this.lineWidth = this.coalesceProperty(this.lineWidth, newLineWidth, keepNulls);
+		this.lineWidth = this.setProperty(this.lineWidth, newLineWidth, keepNulls);
 		return this;
 	}
 	setTextAlign(newTextAlign: CanvasTextAlign, keepNulls = false) {
-		this.textAlign = this.coalesceProperty(this.textAlign, newTextAlign, keepNulls);
+		this.textAlign = this.setProperty(this.textAlign, newTextAlign, keepNulls);
 		return this;
 	}
 	setFont(newFont: Font, keepNulls = false) {
-		this.font = this.coalesceProperty(this.font, newFont, keepNulls);
+		this.font = this.setProperty(this.font, newFont, keepNulls);
 		return this;
 	}
 	setWith(newStyle: Style, keepNulls = false) {
@@ -118,14 +118,20 @@ export class Style {
 	/**
 	 * Apply this style to the MainCanvas ctx
 	 */
-	ctxApply() {
+	ctxApply(drawOnly: boolean) {
 		const ctx = MainCanvas.get.ctx;
 		ctx.fillStyle = getSubStyleValue(this.fillStyle);
 		ctx.strokeStyle = getSubStyleValue(this.strokeStyle);
 		ctx.lineWidth = this.lineWidth;
-		ctx.textAlign = this.textAlign;
-		ctx.font = this.font;
+		if (!drawOnly) {
+			ctx.textAlign = this.textAlign;
+			ctx.font = this.font;
+		}
 		return this;
+	}
+
+	static from(style1: Style, style2: Style = STYLE_EMPTY) {
+		return new Style().setWith(style1).setWith(style2);
 	}
 }
 //#endregion

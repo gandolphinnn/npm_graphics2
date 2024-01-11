@@ -167,12 +167,11 @@ export abstract class CnvElement {
 }
 export class Text extends CnvElement {
 	content: string;
-	customStyle: Style;
+	customStyle: Style = STYLE_EMPTY;
 
 	constructor(center: Coord, content: string) {
-		super(center, RenderAction.Both);
+		super(center, RenderAction.Fill);
 		this.content = content;
-		this.customStyle = null;
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.write(this.customStyle, () => {
@@ -187,7 +186,7 @@ export class Text extends CnvElement {
 		return this;
 	}
 }
-/*export class Img extends CnvElement { //todo whole class
+/*export class Img extends CnvElement { //todo ISSUE #3
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
@@ -207,7 +206,6 @@ export abstract class CnvDrawing extends CnvElement { //todo add point rotation 
 
 	constructor(action: RenderAction, center: Coord) {
 		super(center, action);
-		this.customStyle = null;
 	}
 }
 export class Line extends CnvDrawing {
@@ -435,38 +433,53 @@ export class MainCanvas extends Singleton {
 	}
 
 	//#region Screen
+	/**
+	 * Clear the entire canvas
+	 */
 	clean() {
 		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
 	}
-	rotate(angle = new Angle(0), rotationCenter = this.center) {
+	/*rotate(angle = new Angle(0), rotationCenter = this.center) { //todo ISSUE #4
 		this.ctx.translate(rotationCenter.x, rotationCenter.y);
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
+	}*/
+	/**
+	 * Apply to the context the default style coalesced with the provided style
+	 */
+	applyCustomDrawStyle(drawStyle: Style) { //todo maybe useless
+		Style.from(this.defaultDrawStyle, drawStyle).ctxApply(true);
 	}
-	//todo fix this shitty code about the style
-	applyCustomDrawStyle(drawStyle: Style) {
-		this.ctx.lineWidth		= coalesce(drawStyle.lineWidth,		this.defaultDrawStyle.lineWidth),
-		this.ctx.strokeStyle	= getSubStyleValue(coalesce(drawStyle.strokeStyle,	this.defaultDrawStyle.strokeStyle)),
-		this.ctx.fillStyle		= getSubStyleValue(coalesce(drawStyle.fillStyle,		this.defaultDrawStyle.fillStyle))
+	/**
+	 * Apply to the context the default style coalesced with the provided style
+	 */
+	applyCustomWriteStyle(writeStyle: Style) { //todo maybe useless
+		Style.from(this.defaultWriteStyle, writeStyle).ctxApply(false);
 	}
-	applyCustomWriteStyle(writeStyle: Style) {
-		this.ctx.font			= coalesce(writeStyle.font,			this.defaultWriteStyle.font),
-		this.ctx.textAlign		= coalesce(writeStyle.textAlign,	this.defaultWriteStyle.textAlign)
-	}
-	draw(drawStyle: Style, renderCallBack: Function) {
+	/**
+	 * Save the context, apply the style, begin the path, execute the callback and restore the context
+	 */
+	draw(style: Style, renderCallBack: Function) { //todo maybe useless
 		this.ctx.save();
-		this.applyCustomDrawStyle(drawStyle);
+		this.applyCustomDrawStyle(style);
 		this.ctx.beginPath();
 		renderCallBack();
 		this.ctx.restore();
 	}
-	write(writeStyle: Style, renderCallBack: Function) {
+	/**
+	 * Save the context, apply the style, begin the path, execute the callback and restore the context
+	 */
+	write(style: Style, renderCallBack: Function) { //todo maybe useless
 		this.ctx.save();
-		this.applyCustomWriteStyle(writeStyle);
+		this.applyCustomWriteStyle(style);
 		renderCallBack();
 		this.ctx.restore();
 	}
-	action(drawAction: RenderAction) {
+	/**
+	 * 
+	 * @param drawAction 
+	 */
+	action(drawAction: RenderAction) { //todo maybe useless
 		if (drawAction == RenderAction.Both || drawAction == RenderAction.Fill) {
 			this.ctx.fill();
 		}
@@ -502,7 +515,6 @@ export class MainCanvas extends Singleton {
 
 		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height))//.setStyle(STYLE_DEFAULT.setLineWidth(1))
 		const text = new Text(new Coord(0, 10), '')//.setStyle(STYLE_DEFAULT.setTextAlign('left'))
-		console.log(text);
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			line.center = new Coord(x, this.center.y);
 			line.render();

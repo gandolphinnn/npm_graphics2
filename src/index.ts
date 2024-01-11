@@ -6,8 +6,11 @@ export * from './style.js';
 
 //#region Constants, Enums, Types, Interfaces
 export const IMG_ZINDEX_DEFAULT = 100;
-export const DRAWPOINTS_RADIUS = 3;
-export interface Component {} //? This will be useful later, in rigid2 and game2
+export const POINT_RADIUS = 3;
+export abstract class Component { //todo WIP
+	start() {}
+	update() {}
+} //? This will be useful later, in rigid2 and game2
 export enum RenderAction {
 	None, Stroke, Fill, Both
 }
@@ -105,7 +108,7 @@ export class Angle {
 /**
  * A collection of CnvElements
  */
-export class Mesh implements Component { //todo
+export class Mesh extends Component { //todo WIP
 	private _items: CnvElement[];
 	private readonly _center: Coord;
 	zIndex: number;
@@ -157,7 +160,7 @@ export abstract class CnvElement {
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
 			MainCanvas.get.draw(STYLE_DEFAULT, () => {
-				new Circle(point, DRAWPOINTS_RADIUS).render();
+				new Circle(point, POINT_RADIUS).render();
 			});
 		});
 	}
@@ -290,7 +293,7 @@ export class Path extends CnvDrawing {
 		return this;
 	}
 }
-export class Triangle extends CnvDrawing { //todo remove this. For shapes, use Path
+/* class Triangle extends CnvDrawing { //todo remove this. For shapes, use Path
 	points: [Coord, Coord, Coord];
 
 	get size() { return Coord.size(...this.points) }
@@ -318,8 +321,8 @@ export class Triangle extends CnvDrawing { //todo remove this. For shapes, use P
 		});
 		return this;
 	}
-}
-export class SizedRect extends CnvDrawing {
+}*/
+/*export class SizedRect extends CnvDrawing { //todo remove this. For shapes, use Path
 	size: Size;
 
 	get points() {
@@ -347,7 +350,7 @@ export class SizedRect extends CnvDrawing {
 		});
 		return this;
 	}
-}
+}*/
 export class Circle extends CnvDrawing {
 	radius: number;
 
@@ -372,7 +375,7 @@ export class Arc extends CnvDrawing {
 	start: Angle;
 	end: Angle;
 	rotationDirection: Rotation;
-	cutByCenter: boolean; //todo not implemented in render() yet
+	cutByCenter: boolean;
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
@@ -388,6 +391,9 @@ export class Arc extends CnvDrawing {
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, Boolean(this.rotationDirection));
+			if (this.cutByCenter) { //todo TEST
+				this.ctx.moveTo(this.center.x, this.center.y);
+			}
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;
 		});
@@ -401,21 +407,13 @@ export class MainCanvas extends Singleton {
 
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
-	private _defaultDrawStyle: Style;
-	private _defaultWriteStyle: Style;
+	defaultDrawStyle: Style;
+	defaultWriteStyle: Style;
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
 
-	//get color() { return new Color().byStr(this.cnv.style.backgroundColor)	}
-	set color(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
-
-	get defaultDrawStyle() { return this._defaultDrawStyle }
-	set defaultDrawStyle(defaultDrawStyle: Style) {
-	}
-	get defaultWriteStyle() { return this._defaultWriteStyle }
-	set defaultWriteStyle(defaultWriteStyle: Style) {
-		
-	}
+	get bgColor() { return Color.byStr(this.cnv.style.backgroundColor) }
+	set bgColor(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
 
 	private constructor() {
 		super();
@@ -430,8 +428,8 @@ export class MainCanvas extends Singleton {
 		body.appendChild(this.cnv);
 		this.ctx = this.cnv.getContext('2d')!;
 
-		this._defaultDrawStyle = STYLE_DEFAULT;
-		this._defaultWriteStyle = STYLE_DEFAULT;
+		this.defaultDrawStyle = STYLE_DEFAULT;
+		this.defaultWriteStyle = STYLE_DEFAULT;
 		
 		console.log('Main canvas set');
 	}
@@ -445,14 +443,15 @@ export class MainCanvas extends Singleton {
 		this.ctx.rotate(angle.radians);
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}
+	//todo fix this shitty code about the style
 	applyCustomDrawStyle(drawStyle: Style) {
-		this.ctx.lineWidth		= coalesce(drawStyle.lineWidth,		this._defaultDrawStyle.lineWidth),
-		this.ctx.strokeStyle	= getSubStyleValue(coalesce(drawStyle.strokeStyle,	this._defaultDrawStyle.strokeStyle)),
-		this.ctx.fillStyle		= getSubStyleValue(coalesce(drawStyle.fillStyle,		this._defaultDrawStyle.fillStyle))
+		this.ctx.lineWidth		= coalesce(drawStyle.lineWidth,		this.defaultDrawStyle.lineWidth),
+		this.ctx.strokeStyle	= getSubStyleValue(coalesce(drawStyle.strokeStyle,	this.defaultDrawStyle.strokeStyle)),
+		this.ctx.fillStyle		= getSubStyleValue(coalesce(drawStyle.fillStyle,		this.defaultDrawStyle.fillStyle))
 	}
 	applyCustomWriteStyle(writeStyle: Style) {
-		this.ctx.font			= coalesce(writeStyle.font,			this._defaultWriteStyle.font),
-		this.ctx.textAlign		= coalesce(writeStyle.textAlign,	this._defaultWriteStyle.textAlign)
+		this.ctx.font			= coalesce(writeStyle.font,			this.defaultWriteStyle.font),
+		this.ctx.textAlign		= coalesce(writeStyle.textAlign,	this.defaultWriteStyle.textAlign)
 	}
 	draw(drawStyle: Style, renderCallBack: Function) {
 		this.ctx.save();
@@ -481,8 +480,7 @@ export class MainCanvas extends Singleton {
 	//#endregion
 
 	//#region DrawSamples
-	drawSampleUnits(clean = false, testunit: number = 0) {
-		if(clean) this.clean()
+	drawSampleUnits(testunit: number = 0) {
 		let sampleUnits = [1, 5, 10, 50, 100, 250, 500, 1000];
 		if (testunit > 0 && testunit < this.cnv.width && sampleUnits.indexOf(testunit) == -1) {
 			sampleUnits.push(testunit);
@@ -499,26 +497,23 @@ export class MainCanvas extends Singleton {
 			Coord.sumXY(coord, 0, 20);
 		});
 	}
-	drawSampleMetric(clean = false, scale: number = 50) {
-		//todo: so complicated to do such a shitty simple thing like this. Fix this garbage
+	drawSampleMetric(scale: number = 50) { //todo: so complicated to do such a shitty simple thing like this. Fix this garbage
 		scale = clamp(scale, 25, Infinity);
-		if(clean)
-			this.clean();
 
 		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height))//.setStyle(STYLE_DEFAULT.setLineWidth(1))
 		const text = new Text(new Coord(0, 10), '')//.setStyle(STYLE_DEFAULT.setTextAlign('left'))
 		console.log(text);
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
-			line.moveBy(scale, 0)
-				.render();
+			line.center = new Coord(x, this.center.y);
+			line.render();
 			text.center = new Coord(x+3, 10);
 			text.content = x.toString()
 			text.render();
 		}
 		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)]
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
-			line.moveBy(0, scale)
-				.render();
+			line.center = new Coord(this.center.x, y);
+			line.render();
 			text.center = new Coord(5, y-5);
 			text.content = y.toString()
 			text.render();

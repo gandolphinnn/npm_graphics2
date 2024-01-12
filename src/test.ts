@@ -1,4 +1,4 @@
-import { MainCanvas, Coord, Color, Text, Line, Path, parseRGBA, RGBA, Circle } from './index.js';
+import { MainCanvas, Coord, Color, Text, Line, Path, parseRGBA, RGBA, Circle, Arc, Angle, STYLE_EMPTY} from './index.js';
 import { test } from '@gandolphinnn/utils';
 
 test('rgbParse INVALID', parseRGBA(''), null);
@@ -16,25 +16,24 @@ c1.drawSampleMetric(50);
 //{"fillStyle":{"red":0,"green":0,"blue":0,"alpha":1},"font":"20px Arial","lineWidth":2,"strokeStyle":{"red":0,"green":0,"blue":0,"alpha":1},"textAlign":"left"}
 //{"red":0,"green":0,"blue":0,"alpha":1},"font":"30px Arial","lineWidth":3,"strokeStyle":{"red":255,"green":0,"blue":0,"alpha":1},"textAlign":"left"}
 
+c1.defaultWriteStyle.mergeTextAlign('center').mergeFont('40px arial');
+c1.defaultDrawStyle.mergeFillStyle(Color.byName('Red', .8));
+const sx = 200;
+const text		= new Text(new Coord(sx*1, 100), 'TEST').render(true);
+const line		= new Line(new Coord(sx*2, 100), new Coord(450, 200)).render(true);
+const circle	= new Circle(new Coord(sx*3, 100), 75).render(true);
+const arc		= new Arc(new Coord(sx*4,100), 75, new Angle(10), new Angle(135), false, false).render(true);
+const centerArc	= new Arc(new Coord(sx*5,100), 75, new Angle(10), new Angle(135), false, true).render(true);
+const path		= new Path(true, new Coord(sx*6, 100), new Coord(sx*6-50,150), new Coord(sx*6+25,125)).render(true);
+
+//c1.defaultWriteStyle = {textAlign: 'right', font: '50px Arial'};
+//c1.defaultDrawStyle = {fillStyle: Color.byName('Green', .3)};
 /*
-c1.defaultWriteStyle = {textAlign: 'center', font: '40px arial'};
-c1.defaultDrawStyle = {fillStyle: Color.byName('Red', .8)};
-const text		= new Text(new Coord(100, 50), 'TEST').render(true);
-const line		= new Line(new Coord(200, 50), new Coord(450, 200)).render(true);
-const triangle	= new Triangle(new Coord(400, 50), new Coord(700, 100), new Coord(600, 200)).render(true);
-const rect		= new Rect(new Coord(900, 100), {width: 250, height: 150}).render(true);
-const circle	= new Circle(new Coord(100, 125), 75).render(true);
-const path		= new Path(true, new Coord(50, 50)).render(true);
-
-c1.defaultWriteStyle = {textAlign: 'right', font: '50px Arial'};
-c1.defaultDrawStyle = {fillStyle: Color.byName('Green', .3)};
-
 text.moveBy(50, 250).render(true);
 line.moveBy(50, 250).render(true);
-triangle.moveBy(50, 250).render(true);
-rect.moveBy(50, 250).render(true);
+arc.moveBy(50, 250).render(true);
 circle.moveBy(50, 250).render(true);
 path.moveBy(50, 250).render(true);
 
-new Text(c1.center, 'TEST').setStyle({font: '400px Arial', textAlign: 'center', lineWidth: 1}).render()
+//new Text(c1.center, 'TEST').setStyle({font: '400px Arial', textAlign: 'center', lineWidth: 1}).render()
 /* */

@@ -53,27 +53,32 @@ export class Color {
 
 //#region Style
 export class Style {
-	fillStyle?: SubStyle
-	strokeStyle?: SubStyle
-	lineWidth?: number
+	private _fillStyle?: SubStyle
+	private _strokeStyle?: SubStyle
+	private _lineWidth?: number
 	/**
 	 * @example "left" means the center is just to the left of the text
 	*/
-	textAlign?: CanvasTextAlign
-	font?: Font
+	private _textAlign?: CanvasTextAlign
+	private _font?: Font
+	get fillStyle() { return this._fillStyle }
+	get strokeStyle() { return this._strokeStyle }
+	get lineWidth() { return this._lineWidth }
+	get textAlign() { return this._textAlign }
+	get font() { return this._font }
 	constructor(fillStyle?: SubStyle, strokeStyle?: SubStyle, lineWidth?: number, textAlign?: CanvasTextAlign, font?: Font) {
-		this.fillStyle = fillStyle;
-		this.strokeStyle = strokeStyle;
-		this.lineWidth = lineWidth;
-		this.textAlign = textAlign;
-		this.font = font;
+		this._fillStyle = fillStyle;
+		this._strokeStyle = strokeStyle;
+		this._lineWidth = lineWidth;
+		this._textAlign = textAlign;
+		this._font = font;
 	}
 	/**
 	 * undefined is for not specified values
 	 * null is used to set to undefined
 	 * keepNulls = true will set null to null
 	 */
-	private setProperty(currVal: any, newVal: any, keepNulls: boolean) {
+	private mergeProperty(currVal: any, newVal: any, keepNulls: boolean) {
 		switch (newVal) {
 			case undefined:
 				return currVal;
@@ -87,32 +92,32 @@ export class Style {
 	//? YES -> keep them, make every property private and with a getter
 	//? NO -> remove them, user will deal with its value on its own
 	//? MAYBE -> keep them as a tool and keep every property public
-	setFillStyle(newFillStyle: SubStyle, keepNulls = false) {
-		this.fillStyle = this.setProperty(this.fillStyle, newFillStyle, keepNulls);
+	mergeFillStyle(newFillStyle: SubStyle, keepNulls = false) {
+		this._fillStyle = this.mergeProperty(this.fillStyle, newFillStyle, keepNulls);
 		return this;
 	}
-	setStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
-		this.strokeStyle = this.setProperty(this.strokeStyle, newStrokeStyle, keepNulls);
+	mergeStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
+		this._strokeStyle = this.mergeProperty(this.strokeStyle, newStrokeStyle, keepNulls);
 		return this;
 	}
-	setLineWidth(newLineWidth: number, keepNulls = false) {
-		this.lineWidth = this.setProperty(this.lineWidth, newLineWidth, keepNulls);
+	mergeLineWidth(newLineWidth: number, keepNulls = false) {
+		this._lineWidth = this.mergeProperty(this.lineWidth, newLineWidth, keepNulls);
 		return this;
 	}
-	setTextAlign(newTextAlign: CanvasTextAlign, keepNulls = false) {
-		this.textAlign = this.setProperty(this.textAlign, newTextAlign, keepNulls);
+	mergeTextAlign(newTextAlign: CanvasTextAlign, keepNulls = false) {
+		this._textAlign = this.mergeProperty(this.textAlign, newTextAlign, keepNulls);
 		return this;
 	}
-	setFont(newFont: Font, keepNulls = false) {
-		this.font = this.setProperty(this.font, newFont, keepNulls);
+	mergeFont(newFont: Font, keepNulls = false) {
+		this._font = this.mergeProperty(this.font, newFont, keepNulls);
 		return this;
 	}
-	setWith(newStyle: Style, keepNulls = false) {
-		this.setFillStyle(newStyle.fillStyle, keepNulls);
-		this.setStrokeStyle(newStyle.strokeStyle, keepNulls);
-		this.setLineWidth(newStyle.lineWidth, keepNulls);
-		this.setTextAlign(newStyle.textAlign, keepNulls);
-		this.setFont(newStyle.font, keepNulls);
+	megeWith(newStyle: Style, keepNulls = false) {
+		this.mergeFillStyle(newStyle.fillStyle, keepNulls);
+		this.mergeStrokeStyle(newStyle.strokeStyle, keepNulls);
+		this.mergeLineWidth(newStyle.lineWidth, keepNulls);
+		this.mergeTextAlign(newStyle.textAlign, keepNulls);
+		this.mergeFont(newStyle.font, keepNulls);
 		return this;
 	}
 	/**
@@ -131,7 +136,7 @@ export class Style {
 	}
 
 	static from(style1: Style, style2: Style = STYLE_EMPTY) {
-		return new Style().setWith(style1).setWith(style2);
+		return new Style().megeWith(style1).megeWith(style2);
 	}
 }
 //#endregion

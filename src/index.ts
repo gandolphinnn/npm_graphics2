@@ -14,10 +14,6 @@ export abstract class Component { //todo WIP
 export enum RenderAction {
 	None, Stroke, Fill, Both
 }
-export enum Rotation {
-	Clockwise = 0,
-	CounterClockwise = 1
-}
 /*export enum Ground { //todo not implemented yet, just an idea
 	Back = -1, Middle = 0, Fore = 1
 }*/
@@ -134,6 +130,7 @@ export class Mesh extends Component { //todo WIP
 export abstract class CnvElement {
 	readonly ctx = MainCanvas.get.ctx;
 	action: RenderAction;
+	customStyle: Style = Style.from(STYLE_EMPTY);
 	zIndex = 0;
 
 	protected _center: Coord;
@@ -168,7 +165,6 @@ export abstract class CnvElement {
 }
 export class Text extends CnvElement {
 	content: string;
-	customStyle: Style = STYLE_EMPTY;
 
 	constructor(center: Coord, content: string) {
 		super(center, RenderAction.Fill);
@@ -203,8 +199,6 @@ export class Text extends CnvElement {
 	}
 }*/
 export abstract class CnvDrawing extends CnvElement { //todo add point rotation method
-	customStyle: Style = STYLE_EMPTY;
-
 	constructor(action: RenderAction, center: Coord) {
 		super(center, action);
 	}
@@ -245,8 +239,8 @@ export class Path extends CnvDrawing {
 
 	get nPoints() { return this.points.length}
 	get lines() { 
-		if(this.nPoints < 2) return [];
-		let lines: Line[];
+		let lines: Line[] = [];
+		if(this.nPoints < 2) return lines;
 		for (let i = 1; i < this.nPoints; i++) {
 			lines.push(new Line(this.points[i-1], this.points[i]));
 		}
@@ -280,14 +274,18 @@ export class Path extends CnvDrawing {
 		super(RenderAction.Stroke, Coord.center(...points));
 		this.closed = closed;
 		this.points = points;
+		console.log(this);
 	}
-	getPoint(index: number) { return this.points[overflow(index, 0, this.nPoints)] }
+	/**
+	 * Return the point with the selected index performing and overflow
+	 */
+	getPoint(index: number) { return this.points[overflow(index, 0, this.nPoints-1)] }
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.customStyle, () => {
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
-			for (let i = 1; i < this.nPoints; i++) {
-				length += (!this.closed && i == this.nPoints - 1)? 0 : Coord.distance(this.points[i], this.getPoint(i+1))
-			}
+			this.points.forEach(point => {
+				this.ctx.lineTo(point.x, point.y)
+			});
 			if(this.closed) this.ctx.closePath();
 			MainCanvas.get.action(this.conditionedAction);
 			drawPoints? this.drawPoints(this.points) : null;
@@ -376,26 +374,29 @@ export class Arc extends CnvDrawing {
 	radius: number;
 	start: Angle;
 	end: Angle;
-	rotationDirection: Rotation;
+	counterClockwise: boolean;
 	cutByCenter: boolean;
+
+	get theta() { return new Angle(this.counterClockwise? this.end.degrees - this.start.degrees: this.start.degrees - this.end.degrees) }
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
 
-	constructor(center: Coord, radius: number, start: Angle, end: Angle, rotationDirection = Rotation.Clockwise, cutByCenter = true) {
+	constructor(center: Coord, radius: number, start: Angle, end: Angle, counterClockwise = true, cutByCenter = true) {
 		super(RenderAction.Both, center);
 		this.radius = radius;
 		this.start = start; 
 		this.end = end; 
-		this.rotationDirection = rotationDirection;
+		this.counterClockwise = counterClockwise;
 		this.cutByCenter = cutByCenter;
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.customStyle, () => {
-			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, Boolean(this.rotationDirection));
-			if (this.cutByCenter) { //todo TEST
-				this.ctx.moveTo(this.center.x, this.center.y);
+			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
+			if (this.cutByCenter) {
+				this.ctx.lineTo(this.center.x, this.center.y);
 			}
+			this.ctx.closePath()
 			MainCanvas.get.action(this.action);
 			drawPoints? this.drawPoints() : null;
 		});
@@ -471,7 +472,7 @@ export class MainCanvas extends Singleton {
 		this.ctx.restore();
 	}
 	/**
-	 * Save the context, apply the style, begin the path, execute the callback and restore the context
+	 * Save the context, apply the style, execute the callback and restore the context
 	 */
 	write(style: Style, renderCallBack: Function) { //todo maybe useless
 		this.ctx.save();
@@ -518,9 +519,9 @@ export class MainCanvas extends Singleton {
 		scale = clamp(scale, 25, Infinity);
 
 		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height));
-		line.customStyle.setLineWidth(1);
+		line.customStyle.mergeLineWidth(1);
 		const text = new Text(new Coord(0, 10), '');
-		text.customStyle.setTextAlign('right');
+		text.customStyle.mergeTextAlign('right');
 		
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			line.center = new Coord(x, this.center.y);
@@ -531,7 +532,7 @@ export class MainCanvas extends Singleton {
 		}
 
 		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)];
-		text.customStyle.setTextAlign('left');
+		text.customStyle.mergeTextAlign('left');
 
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			line.center = new Coord(this.center.x, y);
@@ -542,7 +543,6 @@ export class MainCanvas extends Singleton {
 			text.render();
 		}
 		new Circle(this.center, 5).render();
-		new Circle(new Coord(50, 50), 5).render();
 	}
 	//#endregion
 }

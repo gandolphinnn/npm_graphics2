@@ -1,12 +1,11 @@
 import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { Style, Color, getSubStyleValue, STYLE_DEFAULT, STYLE_EMPTY } from './style.js';
+import { Style, Color } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
 
 //#region Constants, Enums, Types, Interfaces
-export const IMG_ZINDEX_DEFAULT = 100;
-export const POINT_RADIUS = 3;
+const IMG_ZINDEX_DEFAULT = 100;
 export abstract class Component { //todo WIP
 	start() {}
 	update() {}
@@ -32,21 +31,22 @@ export class Coord {
 		this.y = y;
 	}
 	copy() { return new Coord(this.x, this.y) }
+	/**
+	 * sum x/y to THIS coordinate
+	 */
+	sumXY(x: number, y: number) {
+		this.x += x;
+		this.y += y;
+		return this;
+	}
 
 	//? sum every coordinate
 	static sum(...coords: Coord[]) {
 		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), new Coord(0, 0));
 	}
-	//? sum x/y to a coordinate
-	static sumXY(coord1: Coord, x: number, y: number) {
-		return new Coord(coord1.x + x, coord1.y + y);
-	}
 	//? get the center of multiple points
 	static center(...coords: Coord[]) {
 		return new Coord(this.sum(...coords).x/coords.length, this.sum(...coords).y/coords.length);
-	}
-	static rotate(rotationCenter: Coord, angle: Angle, ...coords: Coord[]) {
-
 	}
 	//? x/y difference between multiple points
 	static size(...coords: Coord[]) {
@@ -113,7 +113,7 @@ export class Mesh extends Component { //todo WIP
 	set center(coord: Coord) { this._items.forEach(item => {item.center = coord}) }
 	get center() { return this._center; }
 	moveBy(x: number, y: number) {
-		this.center = Coord.sumXY(this.center, x, y);
+		this.center.sumXY(x, y);
 	}
 	addItem(element: CnvElement) {
 		this._items.push(element);
@@ -125,41 +125,45 @@ export class Mesh extends Component { //todo WIP
 		});
 	}
 }
-
 //#region CanvasElements
 export abstract class CnvElement {
 	readonly ctx = MainCanvas.get.ctx;
 	action: RenderAction;
-	customStyle: Style = Style.from(STYLE_EMPTY);
+	customStyle: Style = Style.empty();
 	zIndex = 0;
 
 	protected _center: Coord;
 	get center() { return this._center }
 	set center(center: Coord) { this._center = center }
 
-	constructor(center: Coord, action: RenderAction) {
-		this._center = center;
+	constructor(action: RenderAction, center: Coord) {
 		this.action = action;
+		this._center = center;
 	}
 	moveBy(x: number, y: number) {
-		this.center = Coord.sumXY(this.center, x, y);
-		return this;
-	}
-	setAction(action: RenderAction) {
-		this.action = action;
+		//? keep it like this to triggere the setter
+		this.center = this.center.sumXY(x, y)
 		return this;
 	}
 	setZ(zIndex: number) {
 		this.zIndex = zIndex;
 		return this;
 	}
-
+	
 	abstract render(drawPoints: boolean): CnvElement;
+	protected execAction() {
+		if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {
+			this.ctx.fill();
+		}
+		if (this.action == RenderAction.Both || this.action == RenderAction.Stroke) {
+			this.ctx.stroke();
+		}
+		this.ctx.closePath();
+	}
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
-			MainCanvas.get.draw(STYLE_DEFAULT, () => {
-				new Circle(point, POINT_RADIUS).render();
-			});
+			POINT_DEFAULT.center = point.copy();
+			POINT_DEFAULT.render();
 		});
 	}
 }
@@ -167,11 +171,11 @@ export class Text extends CnvElement {
 	content: string;
 
 	constructor(center: Coord, content: string) {
-		super(center, RenderAction.Fill);
+		super(RenderAction.Fill, center);
 		this.content = content;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.write(this.customStyle, () => {
+		MainCanvas.get.saveApplyExec(this.customStyle, false, () => {
 			if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {
 				this.ctx.fillText(this.content, this.center.x, this.center.y);
 			}
@@ -183,7 +187,8 @@ export class Text extends CnvElement {
 		return this;
 	}
 }
-/*export class Img extends CnvElement { //todo ISSUE #3
+//#region ISSUE #3
+/*export class Img extends CnvElement {
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
@@ -198,9 +203,10 @@ export class Text extends CnvElement {
 		return this;
 	}
 }*/
-export abstract class CnvDrawing extends CnvElement { //todo add point rotation method
+//#endregion
+export abstract class CnvDrawing extends CnvElement {
 	constructor(action: RenderAction, center: Coord) {
-		super(center, action);
+		super(action, center);
 	}
 }
 export class Line extends CnvDrawing {
@@ -220,33 +226,30 @@ export class Line extends CnvDrawing {
 	set center(center: Coord) {
 		const diff = Coord.size(this.center, center)
 		this._center = center;
-		this.points[0] = Coord.sumXY(this.points[0], diff.width, diff.height)
-		this.points[1] = Coord.sumXY(this.points[1], diff.width, diff.height)
+		this.points[0].sumXY(diff.width, diff.height)
+		this.points[1].sumXY(diff.width, diff.height)
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.customStyle, () => {
+		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+			this.ctx.beginPath();
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
-			MainCanvas.get.action(this.action);
-			drawPoints? this.drawPoints(this.points) : null;
+			this.execAction();
 		});
+		drawPoints? this.drawPoints(this.points) : null;
 		return this;
 	}
 }
-export class Path extends CnvDrawing {
-	closed: boolean;
+export class Poly extends CnvDrawing {
 	points: Coord[];
 
-	get nPoints() { return this.points.length}
-	get lines() { 
+	get lines() {  //todo keep or remove?
 		let lines: Line[] = [];
-		if(this.nPoints < 2) return lines;
-		for (let i = 1; i < this.nPoints; i++) {
+		if(this.points.length < 2) return lines;
+		for (let i = 1; i < this.points.length; i++) {
 			lines.push(new Line(this.points[i-1], this.points[i]));
 		}
-		if (this.closed) {
-			lines.push(new Line(this.points.last(), this.points[0]))
-		}
+		lines.push(new Line(this.points.last(), this.points[0]))
 		return lines;
 	}
 	get size() { return Coord.size(...this.points) }
@@ -262,95 +265,33 @@ export class Path extends CnvDrawing {
 		const diff = Coord.size(this.center, center)
 		this._center = center;
 		this.points.forEach(point => {
-			point = Coord.sumXY(point, diff.width, diff.height)
+			point.sumXY(diff.width, diff.height)
 		});
 	}
-	get conditionedAction() {
-		if (this.closed) return this.action;
-		if (this.action == RenderAction.Both) return RenderAction.Stroke;
-		if (this.action == RenderAction.Fill) return RenderAction.None;
-	}
-	constructor(closed: boolean, ...points: Coord[]) {
-		super(RenderAction.Stroke, Coord.center(...points));
-		this.closed = closed;
+	constructor(...points: Coord[]) {
+		super(RenderAction.Both, Coord.center(...points));
 		this.points = points;
 		console.log(this);
 	}
 	/**
 	 * Return the point with the selected index performing and overflow
 	 */
-	getPoint(index: number) { return this.points[overflow(index, 0, this.nPoints-1)] }
+	getPoint(index: number) { return this.points[overflow(index, 0, this.points.length-1)] }
+
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.customStyle, () => {
+		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+			this.ctx.beginPath();
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.points.forEach(point => {
 				this.ctx.lineTo(point.x, point.y)
 			});
-			if(this.closed) this.ctx.closePath();
-			MainCanvas.get.action(this.conditionedAction);
-			drawPoints? this.drawPoints(this.points) : null;
+			this.ctx.closePath();
+			this.execAction();
 		});
+		drawPoints? this.drawPoints(this.points) : null;
 		return this;
 	}
 }
-/* class Triangle extends CnvDrawing { //todo remove this. For shapes, use Path
-	points: [Coord, Coord, Coord];
-
-	get size() { return Coord.size(...this.points) }
-	get perimeter() { return Coord.distance(this.points[0], this.points[1]) + Coord.distance(this.points[1], this.points[2]) + Coord.distance(this.points[2], this.points[0]) }
-	get area() { return 'Todo, maybe impossible' }
-
-	get center() { return Coord.center(...this.points)}
-	set center(center: Coord) {
-		const diff = Coord.size(this.center, center)
-		this._center = center;
-		this.points = [...this.points.map(point => Coord.sumXY(point, diff.width, diff.height))] as [Coord, Coord, Coord];
-	}
-	constructor(...points: [Coord, Coord, Coord]) {
-		super(RenderAction.Both, Coord.center(...points));
-		this.points = points;
-	}
-	render(drawPoints = false) {
-		MainCanvas.get.draw(this.customStyle, () => {
-			this.ctx.moveTo(this.points[0].x, this.points[0].y);
-			this.ctx.lineTo(this.points[1].x, this.points[1].y);
-			this.ctx.lineTo(this.points[2].x, this.points[2].y);
-			this.ctx.closePath();
-			MainCanvas.get.action(this.action);
-			drawPoints? this.drawPoints(this.points) : null;
-		});
-		return this;
-	}
-}*/
-/*export class SizedRect extends CnvDrawing { //todo remove this. For shapes, use Path
-	size: Size;
-
-	get points() {
-		const deltaX = this.size.width/2;
-		const deltaY = this.size.height/2;
-		return [
-			Coord.sumXY(this.center, -deltaX, -deltaY),
-			Coord.sumXY(this.center, deltaX, -deltaY),
-			Coord.sumXY(this.center, deltaX, deltaY),
-			Coord.sumXY(this.center, -deltaX, deltaY),
-		];
-	}
-	get perimeter() { return (this.size.height + this.size.width) * 2 }
-	get area() { return this.size.height * this.size.width }
-
-	constructor(center: Coord, size: Size) {
-		super(RenderAction.Both, center);
-		this.size = size;
-	}
-	render(drawPoints = false) {
-		MainCanvas.get.draw(this.customStyle, () => {
-			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
-			MainCanvas.get.action(this.action);
-			drawPoints? this.drawPoints(this.points) : null;
-		});
-		return this;
-	}
-}*/
 export class Circle extends CnvDrawing {
 	radius: number;
 
@@ -362,14 +303,40 @@ export class Circle extends CnvDrawing {
 		this.radius = radius;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.customStyle, () => {
+		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+			this.ctx.beginPath();
 			this.ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
-			MainCanvas.get.action(this.action);
-			drawPoints? this.drawPoints() : null;
+			this.execAction();
 		});
+		drawPoints? this.drawPoints() : null;
 		return this;
 	}
 }
+//#region ISSUE #6
+/**
+ * Custom path with user defined execution
+ * The center is used just to define a point to move
+ */
+/*export class Path extends CnvDrawing { 
+	execution: Function;
+
+	constructor(center: Coord, execution: Function) {
+		super(RenderAction.Both, center);
+		this.execution = execution;
+	}
+	render() {
+		this.execution()
+		return this;
+	}
+}
+//? Esempio di chiamata a Path
+new Path(new Coord(100, 100), (ctx: CanvasRenderingContext2D, center: Coord) => {
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, 10, 0, 2 * Math.PI);
+	ctx.lineTo(center.x + 10, center.y - 25)
+	ctx.stroke();
+})*/
+//#endregion
 export class Arc extends CnvDrawing {
 	radius: number;
 	start: Angle;
@@ -391,15 +358,16 @@ export class Arc extends CnvDrawing {
 		this.cutByCenter = cutByCenter;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.customStyle, () => {
+		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+			this.ctx.beginPath();
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
 			if (this.cutByCenter) {
 				this.ctx.lineTo(this.center.x, this.center.y);
 			}
 			this.ctx.closePath()
-			MainCanvas.get.action(this.action);
-			drawPoints? this.drawPoints() : null;
+			this.execAction();
 		});
+		drawPoints? this.drawPoints() : null;
 		return this;
 	}
 }
@@ -410,8 +378,9 @@ export class MainCanvas extends Singleton {
 
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
-	defaultDrawStyle: Style;
-	defaultWriteStyle: Style;
+	
+	defaultDrawStyle = Style.default();
+	defaultWriteStyle = Style.default();
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
 
@@ -430,9 +399,6 @@ export class MainCanvas extends Singleton {
 		body.style.margin = '0px';
 		body.appendChild(this.cnv);
 		this.ctx = this.cnv.getContext('2d')!;
-
-		this.defaultDrawStyle = STYLE_DEFAULT;
-		this.defaultWriteStyle = STYLE_DEFAULT;
 		
 		console.log('Main canvas set');
 	}
@@ -450,50 +416,19 @@ export class MainCanvas extends Singleton {
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}*/
 	/**
-	 * Apply to the context the default style coalesced with the provided style
+	 * Apply to the context the default style coalesced with the provided style. Does not change the defautl style
 	 */
-	applyCustomDrawStyle(drawStyle: Style) { //todo maybe useless
-		Style.from(this.defaultDrawStyle, drawStyle).ctxApply(true);
-	}
-	/**
-	 * Apply to the context the default style coalesced with the provided style
-	 */
-	applyCustomWriteStyle(writeStyle: Style) { //todo maybe useless
-		Style.from(this.defaultWriteStyle, writeStyle).ctxApply(false);
-	}
-	/**
-	 * Save the context, apply the style, begin the path, execute the callback and restore the context
-	 */
-	draw(style: Style, renderCallBack: Function) { //todo maybe useless
-		this.ctx.save();
-		this.applyCustomDrawStyle(style);
-		this.ctx.beginPath();
-		renderCallBack();
-		this.ctx.restore();
+	applyCustomStyle(writeStyle: Style, drawOnly: boolean) {
+		Style.from(this.defaultWriteStyle, writeStyle).ctxApply(drawOnly);
 	}
 	/**
 	 * Save the context, apply the style, execute the callback and restore the context
 	 */
-	write(style: Style, renderCallBack: Function) { //todo maybe useless
+	saveApplyExec(style: Style, drawOnly: boolean, renderCallBack: Function) {
 		this.ctx.save();
-		this.applyCustomWriteStyle(style);
+		this.applyCustomStyle(style, drawOnly);
 		renderCallBack();
 		this.ctx.restore();
-	}
-	/**
-	 * 
-	 * @param drawAction 
-	 */
-	action(drawAction: RenderAction) { //todo maybe useless
-		if (drawAction == RenderAction.Both || drawAction == RenderAction.Fill) {
-			this.ctx.fill();
-		}
-		if (drawAction == RenderAction.Both || drawAction == RenderAction.Stroke) {
-			this.ctx.stroke();
-		}
-		if (drawAction == RenderAction.None) {
-			this.ctx.closePath();
-		}
 	}
 	//#endregion
 
@@ -510,9 +445,9 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(Coord.sumXY(coord, -30, +3), unit.toString())//.setStyle(STYLE_DEFAULT).setAction(RenderAction.Fill).render()
-			new Line(coord, Coord.sumXY(coord, unit, 0)).render(); 
-			Coord.sumXY(coord, 0, 20);
+			new Text(coord.sumXY(-30, +3), unit.toString())
+			new Line(coord, coord.sumXY(unit, 0)).render(); 
+			coord.sumXY(0, 20);
 		});
 	}
 	drawSampleMetric(scale: number = 50) {
@@ -546,4 +481,10 @@ export class MainCanvas extends Singleton {
 	}
 	//#endregion
 }
+const POINT_DEFAULT = new Circle(new Coord(0,0), 3)
+POINT_DEFAULT.action = RenderAction.Fill;
+console.log(POINT_DEFAULT.customStyle);
+console.log(new Style(Color.byName('Black')));
+POINT_DEFAULT.customStyle.mergeFillStyle(Color.byName('Black'));
+console.log(POINT_DEFAULT.customStyle);
 //#endregion

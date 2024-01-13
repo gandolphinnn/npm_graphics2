@@ -48,6 +48,9 @@ export class Color {
 	static byObj(rgba: RGBA, alpha?: number) {
 		return new Color(rgba, alpha)
 	}
+	static default() {
+		return new Color(COLOR_DEFAULT.rgbaObj);
+	}
 }
 //#endregion
 
@@ -88,10 +91,6 @@ export class Style {
 				return newVal;
 		}
 	}
-	//todo: are these 5 methods actually useful????
-	//? YES -> keep them, make every property private and with a getter
-	//? NO -> remove them, user will deal with its value on its own
-	//? MAYBE -> keep them as a tool and keep every property public
 	mergeFillStyle(newFillStyle: SubStyle, keepNulls = false) {
 		this._fillStyle = this.mergeProperty(this.fillStyle, newFillStyle, keepNulls);
 		return this;
@@ -135,8 +134,17 @@ export class Style {
 		return this;
 	}
 
-	static from(style1: Style, style2: Style = STYLE_EMPTY) {
-		return new Style().megeWith(style1).megeWith(style2);
+	static from(...style: Style[]) {
+		return style.reduce(
+			(acc, curr) => curr.megeWith(acc),
+			new Style()
+		)
+	}
+	static empty() {
+		return Style.from(STYLE_EMPTY);
+	}
+	static default() {
+		return Style.from(STYLE_DEFAULT);
 	}
 }
 //#endregion
@@ -318,7 +326,15 @@ export const HEX_SHORT_PATTERN: RegExp = /^\#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA
 export const RGB_PATTERN: RegExp = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/
 export const RGBA_PATTERN: RegExp = /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([01](?:\.\d+)?)\))?$/
 
+/**
+ * @WARNING don't assing anything to this, instead use "Color.default()"
+ * @WARNING changing this will impact every future call to Color.default()
+*/
 export const COLOR_DEFAULT	= Color.byName('Black');
+/**
+ * @WARNING don't assing anything to this, instead use "Style.default()"
+ * @WARNING changing this will impact every future call to Style.default()
+*/
 export const STYLE_DEFAULT	= new Style(COLOR_DEFAULT, COLOR_DEFAULT, 1, 'center', '10px Arial');
-export const STYLE_EMPTY	= new Style();
+const STYLE_EMPTY			= new Style(); //! NO EXPORT
 //#endregion

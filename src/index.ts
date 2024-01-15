@@ -5,16 +5,13 @@ import Enumerable from 'linq';
 export * from './style.js';
 
 //#region Constants, Enums, Types, Interfaces
-export abstract class Component { //todo WIP
+export abstract class Component {
 	start() {}
 	update() {}
 } //? This will be useful later, in rigid2 and game2
 export enum RenderAction {
 	None, Stroke, Fill, Both
 }
-/*export enum Ground { //todo not implemented yet, just an idea
-	Back = -1, Middle = 0, Fore = 1
-}*/
 export type Size = {
 	width: number;
 	height: number;
@@ -186,23 +183,6 @@ export class Text extends CnvElement {
 		return this;
 	}
 }
-//#region ISSUE #3
-/*const IMG_ZINDEX_DEFAULT = 100;
-export class Img extends CnvElement {
-	src: string;
-	size: Size;
-	img: HTMLImageElement;
-
-	constructor(center: Coord, src: string, size: Size) {
-		super(center, RenderAction.Both);
-		this.src = src;
-		this.size = size;
-	}
-	render(drawPoints = false) {
-		//drawPoints? this.drawPoints() : null;
-		return this;
-	}
-}*/
 //#endregion
 export abstract class CnvDrawing extends CnvElement {
 	constructor(action: RenderAction, center: Coord) {
@@ -271,7 +251,6 @@ export class Poly extends CnvDrawing {
 	constructor(...points: Coord[]) {
 		super(RenderAction.Both, Coord.center(...points));
 		this.points = points;
-		console.log(this);
 	}
 	/**
 	 * Return the point with the selected index performing and overflow
@@ -312,31 +291,6 @@ export class Circle extends CnvDrawing {
 		return this;
 	}
 }
-//#region ISSUE #6
-/**
- * Custom path with user defined execution
- * The center is used just to define a point to move
- */
-/*export class Path extends CnvDrawing { 
-	execution: Function;
-
-	constructor(center: Coord, execution: Function) {
-		super(RenderAction.Both, center);
-		this.execution = execution;
-	}
-	render() {
-		this.execution()
-		return this;
-	}
-}
-//? Esempio di chiamata a Path
-new Path(new Coord(100, 100), (ctx: CanvasRenderingContext2D, center: Coord) => {
-	ctx.beginPath();
-	ctx.arc(center.x, center.y, 10, 0, 2 * Math.PI);
-	ctx.lineTo(center.x + 10, center.y - 25)
-	ctx.stroke();
-})*/
-//#endregion
 export class Arc extends CnvDrawing {
 	radius: number;
 	start: Angle;
@@ -410,11 +364,6 @@ export class MainCanvas extends Singleton {
 	clean() {
 		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
 	}
-	/*rotate(angle = new Angle(0), rotationCenter = this.center) { //todo ISSUE #4
-		this.ctx.translate(rotationCenter.x, rotationCenter.y);
-		this.ctx.rotate(angle.radians);
-		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
-	}*/
 	/**
 	 * Save the context, apply the style, execute the callback and restore the context
 	 */

@@ -64,8 +64,12 @@ export class Style {
 	*/
 	private _textAlign?: CanvasTextAlign
 	private _font?: Font
+
 	get fillStyle() { return this._fillStyle }
+	get fillStyleVal() { return getSubStyleValue(this._fillStyle) }
 	get strokeStyle() { return this._strokeStyle }
+	get strokeStyleVal() { return getSubStyleValue(this._strokeStyle) }
+
 	get lineWidth() { return this._lineWidth }
 	get textAlign() { return this._textAlign }
 	get font() { return this._font }
@@ -92,11 +96,11 @@ export class Style {
 		}
 	}
 	mergeFillStyle(newFillStyle: SubStyle, keepNulls = false) {
-		this._fillStyle = this.mergeProperty(this.fillStyle, newFillStyle, keepNulls);
+		this._fillStyle = this.mergeProperty(this.fillStyleVal, newFillStyle, keepNulls);
 		return this;
 	}
 	mergeStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
-		this._strokeStyle = this.mergeProperty(this.strokeStyle, newStrokeStyle, keepNulls);
+		this._strokeStyle = this.mergeProperty(this.strokeStyleVal, newStrokeStyle, keepNulls);
 		return this;
 	}
 	mergeLineWidth(newLineWidth: number, keepNulls = false) {
@@ -111,7 +115,7 @@ export class Style {
 		this._font = this.mergeProperty(this.font, newFont, keepNulls);
 		return this;
 	}
-	megeWith(newStyle: Style, keepNulls = false) {
+	mergeWith(newStyle: Style, keepNulls = false) {
 		this.mergeFillStyle(newStyle.fillStyle, keepNulls);
 		this.mergeStrokeStyle(newStyle.strokeStyle, keepNulls);
 		this.mergeLineWidth(newStyle.lineWidth, keepNulls);
@@ -119,24 +123,9 @@ export class Style {
 		this.mergeFont(newStyle.font, keepNulls);
 		return this;
 	}
-	/**
-	 * Apply this style to the MainCanvas ctx
-	 */
-	ctxApply(drawOnly: boolean) {
-		const ctx = MainCanvas.get.ctx;
-		ctx.fillStyle = getSubStyleValue(this.fillStyle);
-		ctx.strokeStyle = getSubStyleValue(this.strokeStyle);
-		ctx.lineWidth = this.lineWidth;
-		if (!drawOnly) {
-			ctx.textAlign = this.textAlign;
-			ctx.font = this.font;
-		}
-		return this;
-	}
-
 	static from(...style: Style[]) {
 		return style.reduce(
-			(acc, curr) => curr.megeWith(acc),
+			(acc, curr) => acc.mergeWith(curr),
 			new Style()
 		)
 	}

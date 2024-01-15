@@ -7,23 +7,24 @@ import { test } from '@gandolphinnn/utils';
 //test('rgbParse HEX1', parseRGBA('#abc'), {red: 10, green: 11, blue: 12, alpha: 1} as RGBA);
 //test('rgbParse HEX2', parseRGBA('#abcdef'), {red: 171, green: 205, blue: 239, alpha: 1} as RGBA);
 //test('Color.byName', Color.byName('AliceBlue'), {red: 240, green: 248, blue: 255, alpha: 1} as RGBA);
-
 const c1 = MainCanvas.get;
-//c1.drawSampleMetric(50);
+c1.drawSampleMetric(50);
+c1.writeStyle.mergeTextAlign('center').mergeFont('40px arial').mergeFillStyle(Color.byName('DarkBlue'));
 
-c1.defaultWriteStyle.mergeTextAlign('center').mergeFont('40px arial');
-c1.defaultDrawStyle.mergeFillStyle(Color.byName('Red', .9));
+c1.drawStyle.mergeFillStyle(Color.byName('Red', .9));
+console.table(c1.drawStyle);
 
 const sx = 150;
-const text		= new Text(new Coord(sx*1-50, 100), 'TEST').render(true);
-const line		= new Line(new Coord(sx*2-100, 50), new Coord(sx*2+50, 150)).render(true);
+const line		= new Line(new Coord(sx*2-100, 50), new Coord(sx*2+50, 150)).render();
+
+const text		= new Text(new Coord(sx*1-50, 100), 'TEST').render();
 const circle	= new Circle(new Coord(sx*3, 100), 75).render(true);
 const arc		= new Arc(new Coord(sx*4,100), 75, new Angle(10), new Angle(135), false, false).render(true);
 const centerArc	= new Arc(new Coord(sx*5,100), 75, new Angle(10), new Angle(135), false, true).render(true);
 const poly		= new Poly(new Coord(sx*6, 100), new Coord(sx*6-50,150), new Coord(sx*6+25,125)).render(true)
 
-c1.defaultWriteStyle.mergeTextAlign('right').mergeFont('50px Calibri');
-c1.defaultDrawStyle.mergeFillStyle(Color.byName('Green', .5));
+c1.writeStyle.mergeTextAlign('right').mergeFont('50px Calibri');
+c1.drawStyle.mergeFillStyle(Color.byName('Green', .5));
 
 const moveY = 200;
 const moveX = 0;

@@ -1,11 +1,10 @@
-import { overflow, clamp, coalesce, Singleton, arrPivot } from '@gandolphinnn/utils';
+import { overflow, clamp, Singleton, arrPivot } from '@gandolphinnn/utils';
 import { Style, Color } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
 
 //#region Constants, Enums, Types, Interfaces
-const IMG_ZINDEX_DEFAULT = 100;
 export abstract class Component { //todo WIP
 	start() {}
 	update() {}
@@ -129,7 +128,7 @@ export class Mesh extends Component { //todo WIP
 export abstract class CnvElement {
 	readonly ctx = MainCanvas.get.ctx;
 	action: RenderAction;
-	customStyle: Style = Style.empty();
+	style: Style = Style.empty();
 	zIndex = 0;
 
 	protected _center: Coord;
@@ -141,7 +140,7 @@ export abstract class CnvElement {
 		this._center = center;
 	}
 	moveBy(x: number, y: number) {
-		//? keep it like this to triggere the setter
+		//? keep it like this to trigger the setter
 		this.center = this.center.sumXY(x, y)
 		return this;
 	}
@@ -175,20 +174,21 @@ export class Text extends CnvElement {
 		this.content = content;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.saveApplyExec(this.customStyle, false, () => {
+		MainCanvas.get.write(this.style, () => {
 			if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {
 				this.ctx.fillText(this.content, this.center.x, this.center.y);
 			}
 			if (this.action == RenderAction.Both || this.action == RenderAction.Stroke) {
 				this.ctx.strokeText(this.content, this.center.x, this.center.y);
 			}
-			drawPoints? this.drawPoints() : null;
 		})
+		drawPoints? this.drawPoints() : null;
 		return this;
 	}
 }
 //#region ISSUE #3
-/*export class Img extends CnvElement {
+/*const IMG_ZINDEX_DEFAULT = 100;
+export class Img extends CnvElement {
 	src: string;
 	size: Size;
 	img: HTMLImageElement;
@@ -230,7 +230,7 @@ export class Line extends CnvDrawing {
 		this.points[1].sumXY(diff.width, diff.height)
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+		MainCanvas.get.draw(this.style, () => {
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
@@ -279,7 +279,7 @@ export class Poly extends CnvDrawing {
 	getPoint(index: number) { return this.points[overflow(index, 0, this.points.length-1)] }
 
 	render(drawPoints = false) {
-		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+		MainCanvas.get.draw(this.style, () => {
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.points.forEach(point => {
@@ -303,7 +303,7 @@ export class Circle extends CnvDrawing {
 		this.radius = radius;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+		MainCanvas.get.draw(this.style, () => {
 			this.ctx.beginPath();
 			this.ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
 			this.execAction();
@@ -358,7 +358,7 @@ export class Arc extends CnvDrawing {
 		this.cutByCenter = cutByCenter;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.saveApplyExec(this.customStyle, true, () => {
+		MainCanvas.get.draw(this.style, () => {
 			this.ctx.beginPath();
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
 			if (this.cutByCenter) {
@@ -379,8 +379,8 @@ export class MainCanvas extends Singleton {
 	readonly cnv: HTMLCanvasElement;
 	readonly ctx: CanvasRenderingContext2D;
 	
-	defaultDrawStyle = Style.default();
-	defaultWriteStyle = Style.default();
+	drawStyle = Style.default();
+	writeStyle = Style.default();
 
 	get center() { return new Coord(this.cnv.width / 2, this.cnv.height / 2) }
 
@@ -416,17 +416,25 @@ export class MainCanvas extends Singleton {
 		this.ctx.translate(-rotationCenter.x, -rotationCenter.y);
 	}*/
 	/**
-	 * Apply to the context the default style coalesced with the provided style. Does not change the defautl style
-	 */
-	applyCustomStyle(writeStyle: Style, drawOnly: boolean) {
-		Style.from(this.defaultWriteStyle, writeStyle).ctxApply(drawOnly);
-	}
-	/**
 	 * Save the context, apply the style, execute the callback and restore the context
 	 */
-	saveApplyExec(style: Style, drawOnly: boolean, renderCallBack: Function) {
-		this.ctx.save();
-		this.applyCustomStyle(style, drawOnly);
+	draw(drawStyle: Style, renderCallBack: Function) {
+		this.ctx.save();		
+		const toApply = Style.from(this.drawStyle, drawStyle);
+		this.ctx.fillStyle = toApply.fillStyleVal;
+		this.ctx.strokeStyle = toApply.strokeStyleVal;
+		this.ctx.lineWidth = toApply.lineWidth;
+		renderCallBack();
+		this.ctx.restore();
+	}
+	write(writeStyle: Style, renderCallBack: Function) {
+		this.ctx.save();		
+		const toApply = Style.from(this.writeStyle, writeStyle);
+		this.ctx.fillStyle = toApply.fillStyleVal;
+		this.ctx.strokeStyle = toApply.strokeStyleVal;
+		this.ctx.lineWidth = toApply.lineWidth;
+		this.ctx.textAlign = toApply.textAlign;
+		this.ctx.font = toApply.font;
 		renderCallBack();
 		this.ctx.restore();
 	}
@@ -454,9 +462,9 @@ export class MainCanvas extends Singleton {
 		scale = clamp(scale, 25, Infinity);
 
 		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height));
-		line.customStyle.mergeLineWidth(1);
+		line.style.mergeLineWidth(1);
 		const text = new Text(new Coord(0, 10), '');
-		text.customStyle.mergeTextAlign('right');
+		text.style.mergeTextAlign('right');
 		
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			line.center = new Coord(x, this.center.y);
@@ -467,7 +475,7 @@ export class MainCanvas extends Singleton {
 		}
 
 		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)];
-		text.customStyle.mergeTextAlign('left');
+		text.style.mergeTextAlign('left');
 
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			line.center = new Coord(this.center.x, y);
@@ -483,8 +491,5 @@ export class MainCanvas extends Singleton {
 }
 const POINT_DEFAULT = new Circle(new Coord(0,0), 3)
 POINT_DEFAULT.action = RenderAction.Fill;
-console.log(POINT_DEFAULT.customStyle);
-console.log(new Style(Color.byName('Black')));
-POINT_DEFAULT.customStyle.mergeFillStyle(Color.byName('Black'));
-console.log(POINT_DEFAULT.customStyle);
+POINT_DEFAULT.style.mergeFillStyle(Color.byName('Black'));
 //#endregion

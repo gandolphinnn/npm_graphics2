@@ -5,10 +5,10 @@ import Enumerable from 'linq';
 export * from './style.js';
 
 //#region Constants, Enums, Types, Interfaces
-export abstract class Component {
-	start() {}
-	update() {}
-} //? This will be useful later, in rigid2 and game2
+export interface Component { //? This will be useful later, in rigid2 and game2
+	start(): void;
+	update(): void;
+}
 export enum RenderAction {
 	None, Stroke, Fill, Both
 }
@@ -101,23 +101,26 @@ export class Angle {
 /**
  * A collection of CnvElements
  */
-export class Mesh extends Component { //todo WIP
-	private _items: CnvElement[];
-	private readonly _center: Coord;
+export class Mesh implements Component {
+	private _center: Coord;
+	items: Enumerable.IEnumerable<CnvElement>;
 	zIndex: number;
 
-	set center(coord: Coord) { this._items.forEach(item => {item.center = coord}) }
+	set center(coord: Coord) { this.items.forEach(item => {item.center = coord}) } //!WRONG
 	get center() { return this._center; }
+	constructor(center: Coord, ...items: CnvElement[]) {
+		this.items = Enumerable.from(items);
+	}
+	start() {}
+	update() { this.render() }
 	moveBy(x: number, y: number) {
-		this.center.sumXY(x, y);
+		//? keep it like this to trigger the setter
+		this.center = this.center.sumXY(x, y);
+		return this;
 	}
-	addItem(element: CnvElement) {
-		this._items.push(element);
-		this._items = Enumerable.from(this._items).orderBy(elem => elem.zIndex).toArray()
-	}
-	render() {
-		this._items.forEach(item => {
-			item.render(false);
+	render(drawPoints = false) {
+		this.items.orderBy(elem => elem.zIndex).forEach(item => {
+			item.render(drawPoints);
 		});
 	}
 }
@@ -183,7 +186,6 @@ export class Text extends CnvElement {
 		return this;
 	}
 }
-//#endregion
 export abstract class CnvDrawing extends CnvElement {
 	constructor(action: RenderAction, center: Coord) {
 		super(action, center);

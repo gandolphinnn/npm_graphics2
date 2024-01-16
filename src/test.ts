@@ -1,4 +1,4 @@
-import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Arc, Angle} from './index.js';
+import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Arc, Angle, Mesh, RenderAction} from './index.js';
 import { test } from '@gandolphinnn/utils';
 
 //test('rgbParse INVALID', parseRGBA(''), null);
@@ -9,30 +9,22 @@ import { test } from '@gandolphinnn/utils';
 //test('Color.byName', Color.byName('AliceBlue'), {red: 240, green: 248, blue: 255, alpha: 1} as RGBA);
 const c1 = MainCanvas.get;
 c1.drawSampleMetric(50);
-c1.writeStyle.mergeTextAlign('center').mergeFont('40px arial').mergeFillStyle(Color.byName('DarkBlue'));
+c1.drawStyle.mergeFillStyle(Color.byName('Grey'));
+c1.writeStyle.mergeTextAlign('center').mergeFont('40px arial');
 
-c1.drawStyle.mergeFillStyle(Color.byName('Red', .9));
-console.table(c1.drawStyle);
+const centerArc	= new Arc(new Coord(274, 200), 75, new Angle(200), new Angle(0), false, true).setZ(0);
+const circle	= new Circle(new Coord(227, 200), 75).setZ(1);
+const poly		= new Poly(new Coord(200, 400),new Coord(150, 200),new Coord(350, 200),new Coord(300, 400),new Coord(250, 475)).setZ(2);
+const line		= new Line(new Coord(150, 200), new Coord(300, 400)).setZ(3);
+const arc		= new Arc(new Coord(250, 100), 141.8, new Angle(45), new Angle(135), false, false).setZ(3);
+const text		= new Text(new Coord(250, 300), 'TEST').setZ(9);
+const mesh = new Mesh(text, line, circle, arc, centerArc, poly);
+console.table(mesh.items.toArray());
 
-const sx = 150;
-const line		= new Line(new Coord(sx*2-100, 50), new Coord(sx*2+50, 150)).render();
-
-const text		= new Text(new Coord(sx*1-50, 100), 'TEST').render();
-const circle	= new Circle(new Coord(sx*3, 100), 75).render(true);
-const arc		= new Arc(new Coord(sx*4,100), 75, new Angle(10), new Angle(135), false, false).render(true);
-const centerArc	= new Arc(new Coord(sx*5,100), 75, new Angle(10), new Angle(135), false, true).render(true);
-const poly		= new Poly(new Coord(sx*6, 100), new Coord(sx*6-50,150), new Coord(sx*6+25,125)).render(true)
-
-c1.writeStyle.mergeTextAlign('right').mergeFont('50px Calibri');
-c1.drawStyle.mergeFillStyle(Color.byName('Green', .5));
+mesh.render();
+mesh.moveBy(200, 500).render()
 
 const moveY = 200;
 const moveX = 0;
 
-text.moveBy(moveX, moveY).render(true);
-line.moveBy(moveX, moveY).render(true);
-arc.moveBy(moveX, moveY).render(true);
-centerArc.moveBy(moveX, moveY).render(true);
-circle.moveBy(moveX, moveY).render(true);
-poly.moveBy(moveX, moveY).render(true);
 /* */

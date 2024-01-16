@@ -1,5 +1,5 @@
 import { overflow, clamp, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { Style, Color } from './style.js';
+import { Style, Color, COLORNAME_RGB, ColorName } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
@@ -30,12 +30,15 @@ export class Coord {
 	/**
 	 * sum x/y to THIS coordinate
 	 */
-	sumXY(x: number, y: number) {
+	moveXY(x: number, y: number) {
 		this.x += x;
 		this.y += y;
 		return this;
 	}
 
+	static sumXY(coord: Coord, x: number, y: number) {
+		return new Coord(coord.x + x, coord.y + y)
+	}
 	//? sum every coordinate
 	static sum(...coords: Coord[]) {
 		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), new Coord(0, 0));
@@ -102,26 +105,29 @@ export class Angle {
  * A collection of CnvElements
  */
 export class Mesh implements Component {
-	private _center: Coord;
+	center: Coord;
 	items: Enumerable.IEnumerable<CnvElement>;
 	zIndex: number;
-
-	set center(coord: Coord) { this.items.forEach(item => {item.center = coord}) } //!WRONG
-	get center() { return this._center; }
+	
 	constructor(center: Coord, ...items: CnvElement[]) {
+		this.center = center;
 		this.items = Enumerable.from(items);
 	}
 	start() {}
 	update() { this.render() }
 	moveBy(x: number, y: number) {
 		//? keep it like this to trigger the setter
-		this.center = this.center.sumXY(x, y);
+		this.center.moveXY(x, y);
+		this.items.forEach(item => {
+			item.moveBy(x, y);
+		});
 		return this;
 	}
 	render(drawPoints = false) {
 		this.items.orderBy(elem => elem.zIndex).forEach(item => {
 			item.render(drawPoints);
 		});
+		if(drawPoints) MainCanvas.get.drawPoint(this.center);
 	}
 }
 //#region CanvasElements
@@ -141,11 +147,15 @@ export abstract class CnvElement {
 	}
 	moveBy(x: number, y: number) {
 		//? keep it like this to trigger the setter
-		this.center = this.center.sumXY(x, y)
+		this.center = this.center.moveXY(x, y)
 		return this;
 	}
 	setZ(zIndex: number) {
 		this.zIndex = zIndex;
+		return this;
+	}
+	setAction(action: RenderAction) {
+		this.action = action;
 		return this;
 	}
 	
@@ -161,8 +171,7 @@ export abstract class CnvElement {
 	}
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
-			POINT_DEFAULT.center = point.copy();
-			POINT_DEFAULT.render();
+			MainCanvas.get.drawPoint(point);
 		});
 	}
 }
@@ -182,7 +191,7 @@ export class Text extends CnvElement {
 				this.ctx.strokeText(this.content, this.center.x, this.center.y);
 			}
 		})
-		drawPoints? this.drawPoints() : null;
+		if(drawPoints) this.drawPoints();
 		return this;
 	}
 }
@@ -208,14 +217,44 @@ export class Line extends CnvDrawing {
 	set center(center: Coord) {
 		const diff = Coord.size(this.center, center)
 		this._center = center;
-		this.points[0].sumXY(diff.width, diff.height)
-		this.points[1].sumXY(diff.width, diff.height)
+		this.points[0].moveXY(diff.width, diff.height)
+		this.points[1].moveXY(diff.width, diff.height)
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.style, () => {
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.ctx.lineTo(this.points[1].x, this.points[1].y);
+			this.execAction();
+		});
+		if(drawPoints) this.drawPoints(this.points);
+		return this;
+	}
+}
+export class Rect extends CnvDrawing {
+	size: Size;
+
+	get points() {
+		const deltaX = this.size.width/2;
+		const deltaY = this.size.height/2;
+		return [
+			Coord.sumXY(this.center, -deltaX, -deltaY),
+			Coord.sumXY(this.center, deltaX, -deltaY),
+			Coord.sumXY(this.center, deltaX, deltaY),
+			Coord.sumXY(this.center, -deltaX, deltaY),
+		];
+	}
+	get perimeter() { return (this.size.height + this.size.width) * 2 }
+	get area() { return this.size.height * this.size.width }
+
+	constructor(center: Coord, size: Size) {
+		super(RenderAction.Both, center);
+		this.size = size;
+	}
+	render(drawPoints = false) {
+		MainCanvas.get.draw(this.style, () => {
+			this.ctx.beginPath();
+			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
 			this.execAction();
 		});
 		drawPoints? this.drawPoints(this.points) : null;
@@ -247,7 +286,7 @@ export class Poly extends CnvDrawing {
 		const diff = Coord.size(this.center, center)
 		this._center = center;
 		this.points.forEach(point => {
-			point.sumXY(diff.width, diff.height)
+			point.moveXY(diff.width, diff.height)
 		});
 	}
 	constructor(...points: Coord[]) {
@@ -269,7 +308,7 @@ export class Poly extends CnvDrawing {
 			this.ctx.closePath();
 			this.execAction();
 		});
-		drawPoints? this.drawPoints(this.points) : null;
+		if(drawPoints) this.drawPoints(this.points);
 		return this;
 	}
 }
@@ -289,7 +328,7 @@ export class Circle extends CnvDrawing {
 			this.ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
 			this.execAction();
 		});
-		drawPoints? this.drawPoints() : null;
+		if(drawPoints) this.drawPoints();
 		return this;
 	}
 }
@@ -323,7 +362,7 @@ export class Arc extends CnvDrawing {
 			this.ctx.closePath()
 			this.execAction();
 		});
-		drawPoints? this.drawPoints() : null;
+		if(drawPoints) this.drawPoints();
 		return this;
 	}
 }
@@ -391,8 +430,35 @@ export class MainCanvas extends Singleton {
 	}
 	//#endregion
 
-	//#region DrawSamples
-	drawSampleUnits(testunit: number = 0) {
+	//#region Draw
+	drawPoint(point: Coord) {
+		POINT_DEFAULT.center = point.copy();
+		POINT_DEFAULT.render();
+	}
+	drawSampleColors() {
+		const scale = 100;
+		const whiteTextThreshold = 250;
+		const colors = Object.keys(COLORNAME_RGB);
+		const maxY = Math.floor(this.cnv.width / scale);
+		const maxX = Math.floor(this.cnv.height / scale);
+		let x: number, y: number;
+		const rect = new Rect(new Coord(0,0), {height:scale, width: scale});
+		const text = new Text(new Coord(0,0), 'asd');
+		text.style.mergeFont('10px Arial');
+		for (let i = 0; i < colors.length; i++) {
+			y = Math.floor(i/maxY);
+			x = i % maxY;
+			const color = Color.byName(colors[i] as ColorName);
+			rect.center = new Coord(x*scale+scale/2, y*scale+scale/2);
+			rect.style.mergeFillStyle(color);
+			rect.render();
+			text.center = new Coord(x*scale+scale/2, y*scale+scale/2);
+			text.style.mergeFillStyle(color.red + color.green + color.blue < whiteTextThreshold? Color.byName('White') : Color.byName('Black'))	;
+			text.content = colors[i];
+			text.render();
+		}
+	}
+	drawSampleUnits(testunit = 0) {
 		let sampleUnits = [1, 5, 10, 50, 100, 250, 500, 1000];
 		if (testunit > 0 && testunit < this.cnv.width && sampleUnits.indexOf(testunit) == -1) {
 			sampleUnits.push(testunit);
@@ -404,18 +470,18 @@ export class MainCanvas extends Singleton {
 		this.ctx.lineWidth = 4;
 		sampleUnits.forEach(unit => {
 			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(coord.sumXY(-30, +3), unit.toString())
-			new Line(coord, coord.sumXY(unit, 0)).render(); 
-			coord.sumXY(0, 20);
+			new Text(coord.moveXY(-30, +3), unit.toString())
+			new Line(coord, coord.moveXY(unit, 0)).render(); 
+			coord.moveXY(0, 20);
 		});
 	}
-	drawSampleMetric(scale: number = 50) {
+	drawSampleMetric(scale = 50) {
 		scale = clamp(scale, 25, Infinity);
 
 		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height));
-		line.style.mergeLineWidth(1);
+		line.style.mergeLineWidth(1).mergeStrokeStyle(Color.byName('Black', .3));
 		const text = new Text(new Coord(0, 10), '');
-		text.style.mergeTextAlign('right');
+		text.style.mergeTextAlign('right').mergeFillStyle(Color.byName('Black', .5));
 		
 		for (let x = scale; x < this.cnv.width; x += scale) { //? Vertical lines
 			line.center = new Coord(x, this.center.y);

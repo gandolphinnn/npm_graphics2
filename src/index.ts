@@ -1,10 +1,10 @@
 import { overflow, clamp, Singleton, arrPivot } from '@gandolphinnn/utils';
-import { Style, Color, COLORNAME_RGB, ColorName } from './style.js';
+import { Style, Color, ColorName, COLORNAME_RGBA } from './style.js';
 import Enumerable from 'linq';
 
 export * from './style.js';
 
-//#region Constants, Enums, Types, Interfaces
+//#region Interfaces, Enums, Types
 export interface Component { //? This will be useful later, in rigid2 and game2
 	start(): void;
 	update(): void;
@@ -438,9 +438,8 @@ export class MainCanvas extends Singleton {
 	drawSampleColors() {
 		const scale = 100;
 		const whiteTextThreshold = 250;
-		const colors = Object.keys(COLORNAME_RGB);
+		const colors = Object.keys(COLORNAME_RGBA);
 		const maxY = Math.floor(this.cnv.width / scale);
-		const maxX = Math.floor(this.cnv.height / scale);
 		let x: number, y: number;
 		const rect = new Rect(new Coord(0,0), {height:scale, width: scale});
 		const text = new Text(new Coord(0,0), 'asd');
@@ -458,21 +457,24 @@ export class MainCanvas extends Singleton {
 			text.render();
 		}
 	}
-	drawSampleUnits(testunit = 0) {
-		let sampleUnits = [1, 5, 10, 50, 100, 250, 500, 1000];
-		if (testunit > 0 && testunit < this.cnv.width && sampleUnits.indexOf(testunit) == -1) {
-			sampleUnits.push(testunit);
-			sampleUnits.sort(function (a, b) {
-				return a - b;
-			});
-		}
-		let coord = new Coord(this.center.x - 500, this.center.y - (20 * sampleUnits.length / 2));
-		this.ctx.lineWidth = 4;
+	drawSampleUnits(...testUnits: number[]) {		
+		let sampleUnits = [...new Set([1, 5, 10, 50, 100, 250, 500, 1000, ...testUnits])]
+							.filter(v => v > 0)
+							.sort((a, b) => a-b);
+		let coord = new Coord(this.center.x - 500, this.center.y - (30 * sampleUnits.length / 2));
+
+		const line = new Line(new Coord(0,0), new Coord(0,0));
+		line.style.mergeLineWidth(4);
+		const text = new Text(coord, '');
+		text.style.mergeFont('20px Arial').mergeTextAlign('right');
 		sampleUnits.forEach(unit => {
-			this.ctx.strokeStyle = unit == testunit ? 'red' : 'black';
-			new Text(coord.moveXY(-30, +3), unit.toString())
-			new Line(coord, coord.moveXY(unit, 0)).render(); 
-			coord.moveXY(0, 20);
+			testUnits.indexOf(unit) != -1 ? line.style.mergeStrokeStyle(Color.byName('Red')) : line.style.mergeStrokeStyle(Color.byName('Black'));
+			line.points[0] = Coord.sumXY(coord, 10, 0);
+			line.points[1] = Coord.sumXY(coord, unit + 10, 0);
+			text.content = unit.toString();
+			line.render()
+			text.render(); 
+			coord.moveXY(0, 30);
 		});
 	}
 	drawSampleMetric(scale = 50) {
@@ -496,7 +498,7 @@ export class MainCanvas extends Singleton {
 
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
 			line.center = new Coord(this.center.x, y);
-			line.center.x =this.center.x
+			line.center.x = this.center.x;
 			line.render();
 			text.center = new Coord(5, y-5);
 			text.content = y.toString();
@@ -506,7 +508,9 @@ export class MainCanvas extends Singleton {
 	}
 	//#endregion
 }
-const POINT_DEFAULT = new Circle(new Coord(0,0), 3)
-POINT_DEFAULT.action = RenderAction.Fill;
-POINT_DEFAULT.style.mergeFillStyle(Color.byName('Black'));
+//#endregion
+
+//#region Constants
+const POINT_DEFAULT = new Circle(new Coord(0,0), 3).setAction(RenderAction.Fill);
+	POINT_DEFAULT.style.mergeFillStyle(Color.byName('Black'));
 //#endregion

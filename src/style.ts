@@ -1,8 +1,6 @@
 import { clamp, coalesce, hexToDec, decToHex } from '@gandolphinnn/utils';
-import { MainCanvas } from './index.js';
 
-
-//#region Types and Interfaces
+//#region Types
 /**
  * @example "10px Arial"
 */
@@ -17,7 +15,7 @@ export type RGBA = {
 }
 //#endregion
 
-//#region Color
+//#region Classes
 export class Color {
 	red: number;
 	green: number;
@@ -29,15 +27,16 @@ export class Color {
 	get rgbaObj() { return {red: this.red, green: this.green, blue: this.blue, alpha: this.alpha} as RGBA }
 
 	private constructor(rgba: RGBA, alpha?: number) {
-		rgba.alpha = coalesce(alpha, rgba.alpha);
-		rgba = clampRGBA(rgba);		
-		this.red = rgba.red;
-		this.green = rgba.green;
-		this.blue = rgba.blue;
-		this.alpha = rgba.alpha;
+		let newRGBA = {...rgba} as RGBA;
+		newRGBA.alpha = coalesce(alpha, newRGBA.alpha)
+		newRGBA = clampRGBA(newRGBA);		
+		this.red = newRGBA.red;
+		this.green = newRGBA.green;
+		this.blue = newRGBA.blue;
+		this.alpha = newRGBA.alpha;
 	}
 	static byName(colorName: ColorName, alpha?: number) {
-		return this.byObj(COLORNAME_RGB[colorName], alpha);
+		return this.byObj(COLORNAME_RGBA[colorName], alpha);
 	}
 	static byStr(string: string, alpha?: number) {
 		return this.byObj(parseRGBA(string), alpha);
@@ -52,9 +51,6 @@ export class Color {
 		return new Color(COLOR_DEFAULT.rgbaObj);
 	}
 }
-//#endregion
-
-//#region Style
 export class Style {
 	private _fillStyle?: SubStyle
 	private _strokeStyle?: SubStyle
@@ -149,13 +145,15 @@ export function clampRGBA(rgba: RGBA) {
  * Get the RGBA object from a string using multiple regex patterns. If invalid, return null
  */
 export function parseRGBA(str: string) {
+	//? try to parse with every pattern
 	let match = coalesce(str.match(RGBA_PATTERN), str.match(RGB_PATTERN), str.match(HEX_LONG_PATTERN), str.match(HEX_SHORT_PATTERN)) as RegExpMatchArray;
 	
 	if (!match) {
 		return null;
 	}
+	//? map on these constants the conversion of the regex result based on its type (hex or dec)
 	const [_, red, green, blue, alpha] = match.map(match[0][0] == '#'? hexToDec : parseFloat);
-	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha, 1)})
+	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha, 1)});
 }
 /**
  * If the style object is a Color, return its rgbaStr, otherwise return the object
@@ -166,7 +164,7 @@ export function getSubStyleValue(style: SubStyle) {
 //#endregion
 
 //#region Constants
-export const COLORNAME_RGB: Record<ColorName, RGBA> = {
+export const COLORNAME_RGBA: Readonly<Record<ColorName, Readonly<RGBA>>> = Object.freeze({
 	'AliceBlue':			{red: 240,	green: 248,	blue: 255,	alpha: 1},
 	'AntiqueWhite':			{red: 250,	green: 235,	blue: 215,	alpha: 1},
 	'Aqua':					{red: 0,	green: 255,	blue: 255,	alpha: 1},
@@ -308,7 +306,7 @@ export const COLORNAME_RGB: Record<ColorName, RGBA> = {
 	'WhiteSmoke':			{red: 245,	green: 245,	blue: 245,	alpha: 1},
 	'Yellow':				{red: 255,	green: 255,	blue: 0,	alpha: 1},
 	'YellowGreen':			{red: 154,	green: 205,	blue: 50,	alpha: 1}
-}
+});
 
 export const HEX_LONG_PATTERN: RegExp = /^\#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/
 export const HEX_SHORT_PATTERN: RegExp = /^\#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/

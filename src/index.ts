@@ -1,4 +1,4 @@
-import { overflow, clamp, Singleton, arrPivot } from '@gandolphinnn/utils';
+import { overflow, clamp, Singleton, arrPivot, isNull } from '@gandolphinnn/utils';
 import { Style, Color, ColorName, COLORNAME_RGBA } from './style.js';
 import Enumerable from 'linq';
 
@@ -400,16 +400,19 @@ export class MainCanvas extends Singleton {
 	private constructor() {
 		super();
 		const body = document.querySelector('body')!;
-		body.innerHTML = '';
+		this.cnv = body.querySelectorAll('canvas')[0];
 
-		this.cnv = document.createElement('canvas');
-		this.cnv.width = window.innerWidth;
-		this.cnv.height = window.innerHeight;
-		body.style.overflow = 'hidden';
-		body.style.margin = '0px';
-		body.appendChild(this.cnv);
-		this.ctx = this.cnv.getContext('2d')!;
+		if (isNull(this.cnv)) {
+			body.innerHTML = '';
+			this.cnv = document.createElement('canvas');
+			this.cnv.width = window.innerWidth;
+			this.cnv.height = window.innerHeight;
+			body.style.overflow = 'hidden';
+			body.style.margin = '0px';
+			body.appendChild(this.cnv);
+		}
 		
+		this.ctx = this.cnv.getContext('2d')!;
 		console.log('Main canvas set');
 	}
 

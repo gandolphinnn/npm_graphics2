@@ -121,8 +121,7 @@ export class Mesh {
 	}
 	set center(center: Coord) {
 		const diff = Coord.difference(center, this.center);
-		this._center = center;
-		this.items.forEach(item => item.moveBy(diff.x, diff.y))
+		this.moveBy(diff.x, diff.y);
 	}
 	constructor(center: Coord, ...items: CnvElement[]) {
 		this._center = center;

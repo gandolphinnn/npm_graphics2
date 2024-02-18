@@ -9,7 +9,7 @@
 	],
 	"scripts": {
 		"live": "concurrently \"tsc --watch\" \"parcel index.html --open\"",
-		"clean": "rmdir \".parcel-cache\" && del /Q /f \"dist\" && tsc && del /Q /f \"dist\\test*\"",
+		"clean": "del /Q /f \"dist\" && tsc && del /Q /f \"dist\\test*\"",
 		"publish": "npm run clean && npm publish"
 	},
 	"repository": {
@@ -23,11 +23,6 @@
 	},
 	"homepage": "https://github.com/gandolphinnn/npm_graphics2#readme",
 	"dependencies": {
-		"@gandolphinnn/utils": "^3.0.2"
-	},
-	"devDependencies": {
-		"@parcel/config-default": "^2.10.3",
-		"@parcel/transformer-typescript-tsc": "^2.10.3",
-		"parcel-reporter-static-files-copy": "^1.5.3"
+		"@gandolphinnn/utils": "^3.1.0"
 	}
 }

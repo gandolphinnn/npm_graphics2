@@ -6,12 +6,11 @@ import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Ar
 //test('rgbParse HEX1', parseRGBA('#abc'), {red: 10, green: 11, blue: 12, alpha: 1} as RGBA);
 //test('rgbParse HEX2', parseRGBA('#abcdef'), {red: 171, green: 205, blue: 239, alpha: 1} as RGBA);
 //test('Color.byName', Color.byName('AliceBlue'), {red: 240, green: 248, blue: 255, alpha: 1} as RGBA);
-const c1 = MainCanvas.get;
-c1.drawSampleUnits(0, 100, 99, 420);
+MainCanvas.drawSampleUnits(0, 100, 99, 420);
 
-c1.drawSampleMetric(50);
-c1.drawStyle.mergeFillStyle(Color.byName('Grey'));
-c1.writeStyle.mergeTextAlign('center').mergeFont('40px arial');
+MainCanvas.drawSampleMetric(50);
+MainCanvas.drawStyle.mergeFillStyle(Color.byName('Grey'));
+MainCanvas.writeStyle.mergeTextAlign('center').mergeFont('40px arial');
 
 const centerArc	= new Arc(new Coord(274, 200), 75, new Angle(250), new Angle(0), false, true).setZ(0);
 centerArc.style.mergeFillStyle(Color.byName('SpringGreen'));

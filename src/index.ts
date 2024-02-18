@@ -26,6 +26,9 @@ export class Coord {
 		this.x = x;
 		this.y = y;
 	}
+	/**
+	 * return a new Coord with the same x and y
+	 */
 	copy() { return new Coord(this.x, this.y) }
 	/**
 	 * sum x/y to THIS coordinate
@@ -47,7 +50,11 @@ export class Coord {
 	static center(...coords: Coord[]) {
 		return new Coord(this.sum(...coords).x/coords.length, this.sum(...coords).y/coords.length);
 	}
-	//? x/y difference between multiple points
+	//? x/y difference between 2 points. Order matters
+	static difference(coord1: Coord, coord2: Coord) {
+		return {x: coord1.x - coord2.x, y: coord1.y - coord2.y};
+	}
+	//? width/height size of an area defined by multiple points
 	static size(...coords: Coord[]) {
 		const pivoted = arrPivot(coords);	
 		const cMax = new Coord(Math.max(...pivoted.x), Math.max(...pivoted.y));
@@ -104,17 +111,25 @@ export class Angle {
 /**
  * A collection of CnvElements
  */
-export class Mesh implements Component {
-	center: Coord;
+export class Mesh {
+	_center: Coord;
 	items: Enumerable.IEnumerable<CnvElement>;
 	zIndex: number;
 	
+	get center() {
+		return this._center;
+	}
+	set center(center: Coord) {
+		const diff = Coord.difference(center, this.center);
+		console.log(this.center, center, diff);
+		
+		this._center = center;
+		this.items.forEach(item => item.moveBy(diff.x, diff.y))
+	}
 	constructor(center: Coord, ...items: CnvElement[]) {
-		this.center = center;
+		this._center = center;
 		this.items = Enumerable.from(items);
 	}
-	start() {}
-	update() { this.render() }
 	moveBy(x: number, y: number) {
 		//? keep it like this to trigger the setter
 		this.center.moveXY(x, y);
@@ -215,10 +230,10 @@ export class Line extends CnvDrawing {
 	 */
 	get center() { return Coord.center(...this.points)}
 	set center(center: Coord) {
-		const diff = Coord.size(this.center, center)
+		const diff = Coord.difference(center, this.center)
 		this._center = center;
-		this.points[0].moveXY(diff.width, diff.height)
-		this.points[1].moveXY(diff.width, diff.height)
+		this.points[0].moveXY(diff.x, diff.y)
+		this.points[1].moveXY(diff.x, diff.y)
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.style, () => {
@@ -264,7 +279,7 @@ export class Rect extends CnvDrawing {
 export class Poly extends CnvDrawing {
 	points: Coord[];
 
-	get lines() {  //todo keep or remove?
+	get lines() {
 		let lines: Line[] = [];
 		if(this.points.length < 2) return lines;
 		for (let i = 1; i < this.points.length; i++) {
@@ -283,10 +298,10 @@ export class Poly extends CnvDrawing {
 	}
 	get center() { return Coord.center(...this.points)}
 	set center(center: Coord) {
-		const diff = Coord.size(this.center, center)
+		const diff = Coord.difference(center, this.center)
 		this._center = center;
 		this.points.forEach(point => {
-			point.moveXY(diff.width, diff.height)
+			point.moveXY(diff.x, diff.y)
 		});
 	}
 	constructor(...points: Coord[]) {

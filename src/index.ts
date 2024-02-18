@@ -121,8 +121,6 @@ export class Mesh {
 	}
 	set center(center: Coord) {
 		const diff = Coord.difference(center, this.center);
-		console.log(this.center, center, diff);
-		
 		this._center = center;
 		this.items.forEach(item => item.moveBy(diff.x, diff.y))
 	}

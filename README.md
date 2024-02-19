@@ -9,20 +9,15 @@
 
 <br>
 <div align="center">
-  <a href="https://github.com/gandolphinnn/npm_graphics2">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
 
 <h3 align="center">npm_graphics2</h3>
 
   <p align="center">
     A high-level TypeScript framework availble on NPM to easily perform scripting on a canvas
     <br>
-    <a href="https://github.com/gandolphinnn/npm_graphics2"><strong>Explore the docs »</strong></a>
-    <br>  <br>
-    <a href="https://github.com/gandolphinnn/npm_graphics2/issues">Report Bug</a>
+    <a href="https://github.com/gandolphinnn/npm_graphics2">Explore the repo</a>
     ·
-    <a href="https://github.com/gandolphinnn/npm_graphics2/issues">Request Feature</a>
+    <a href="https://github.com/gandolphinnn/npm_graphics2/issues">Issues</a>
   </p>
 </div>
 
@@ -74,8 +69,14 @@ This is an example of how to list things you need to use the software and how to
 <!-- USAGE EXAMPLES -->
 
 ## Usage
+This package have 2 files: Style.ts and Index.ts.
+Style.ts is used to modify the style of the CnvElements (see Index > CnvElements).
+You don't need to import this file because it's already exported by Index.ts.
+Index.ts contains multiple types, enums and classes to draw and write inside the canvas.
+The HTML canvas is managed by the MainCanvas Singleton.
+Coord, Angle. //WIP Usage documentation
 
-### Style.ts
+### Style
 <details>
 <summary>Color</summary>
 The Color class represents a color in RGBA format (Red, Green, Blue, Alpha).

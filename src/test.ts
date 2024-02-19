@@ -32,8 +32,6 @@ const text		= new Text(new Coord(250, 300), 'TEST').setZ(4).setAction(RenderActi
 const mesh		= new Mesh(new Coord(250, 400), text, line, circle, arc, centerArc, poly);
 console.table(mesh.items.toArray());
 
-mesh.render(true);
-mesh.moveBy(300, 200).render(true)
-mesh.center = new Coord(1500, 350);
-mesh.render(true)
+mesh.moveBy(600, -50).render(true)
+mesh.moveBy(300, -50).render()
 /* */

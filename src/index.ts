@@ -115,6 +115,7 @@ export class Mesh {
 	_center: Coord;
 	items: Enumerable.IEnumerable<CnvElement>;
 	zIndex: number;
+	visible: boolean = true;
 	
 	get center() {
 		return this._center;
@@ -136,9 +137,11 @@ export class Mesh {
 		return this;
 	}
 	render(drawPoints = false) {
-		this.items.orderBy(elem => elem.zIndex).forEach(item => {
-			item.render(drawPoints);
-		});
+		if (this.visible) {
+			this.items.orderBy(elem => elem.zIndex).forEach(item => {
+				item.render(drawPoints);
+			});
+		}
 		if(drawPoints) MainCanvas.get.drawPoint(this.center);
 	}
 }

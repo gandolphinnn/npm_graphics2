@@ -48,7 +48,7 @@
 
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]]
+![Demo Screen Shot][product-screenshot]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -69,14 +69,14 @@ This is an example of how to list things you need to use the software and how to
 <!-- USAGE EXAMPLES -->
 
 ## Usage
-This package have 2 files: Style.ts and Index.ts.
+This package have 2 source files: Style.ts and Index.ts.
 Style.ts is used to modify the style of the CnvElements (see Index > CnvElements).
 You don't need to import this file because it's already exported by Index.ts.
 Index.ts contains multiple types, enums and classes to draw and write inside the canvas.
 The HTML canvas is managed by the MainCanvas Singleton.
 Coord, Angle. //WIP Usage documentation
 
-### Style
+### Style.ts
 <details>
 <summary>Color</summary>
 The Color class represents a color in RGBA format (Red, Green, Blue, Alpha).
@@ -134,6 +134,95 @@ The empty and default methods create an empty and default Style, respectively.
 These methods return the Style instance itself, allowing the methods to be chained together.
 </details>
 
+### Index.ts
+<details>
+<summary>RenderAction</summary>
+An enum used by every CnvElement to 
+</details>
+<details>
+<summary>Size</summary>
+
+</details>
+<details>
+<summary>Coord</summary>
+
+</details>
+<details>
+<summary>Angle</summary>
+
+</details>
+<details>
+<summary>Mesh</summary>
+A group of CnvElements with a user-defined center.
+</details>
+<details>
+<summary>CnvElement</summary>
+CnvDrawing is an abstract child of CnvElement and is the parent of all of the following classes, Text excluded.
+	<table>
+		<thead>
+			<tr>
+				<th>Class</th>
+				<th colspan="6">Constructor</th>
+				<th>Default RenderAction</th>
+				<th>Methods</th>
+				<th>Example</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Text</td>
+				<td colspan="3">center: Coord</td>
+				<td colspan="3">content: string</td>
+				<td>Fill</td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Line</td>
+				<td colspan="6">...points: [Coord, Coord]</td>
+				<td>Stroke</td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Rect</td>
+				<td colspan="3">center: Coord</td>
+				<td colspan="3">size: Size</td>
+				<td>Both</td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Poly</td>
+				<td colspan="6">...points: Coord[]</td>
+				<td>Both</td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Circle</td>
+				<td colspan="3">center: Coord</td>
+				<td colspan="3">radius: number</td>
+				<td>Both</td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Arc</td>
+				<td>center: Coord</td>
+				<td>radius: number</td>
+				<td>start: Angle</td>
+				<td>end: Angle</td>
+				<td>counterClockwise = true</td>
+				<td>cutByCenter = true</td>
+				<td>Both</td>
+				<td></td>
+				<td></td>
+			</tr>
+		</tbody>
+	</table>
+</details>
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
@@ -141,6 +230,8 @@ These methods return the Style instance itself, allowing the methods to be chain
 ## Contributing
 
 Any contributions you make are **greatly appreciated**.
+
+Feel free to assign yourself an open issue or open a new one.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request.
 You can also simply open an issue with the tag "enhancement".

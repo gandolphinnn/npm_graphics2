@@ -164,11 +164,10 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 				<th>Class</th>
 				<th colspan="6">Constructor</th>
 				<th>Default RenderAction</th>
-				<th>Methods</th>
-				<th>Example</th>
+				<th colspan="2">Example</th>
 			</tr>
 		</thead>
-		<tbody>
+		<tbody style="font-size:14px">
 			<tr>
 				<td>Text</td>
 				<td colspan="3">center: Coord</td>
@@ -179,10 +178,10 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 			</tr>
 			<tr>
 				<td>Line</td>
-				<td colspan="6">...points: [Coord, Coord]</td>
+				<td colspan="3">point1: Coord</td>
+				<td colspan="3">point2: Coord</td>
 				<td>Stroke</td>
-				<td></td>
-				<td></td>
+				<td colspan="2"><img src="demos/demo_line.png"></td>
 			</tr>
 			<tr>
 				<td>Rect</td>
@@ -268,4 +267,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [license-url]: https://github.com/gandolphinnn/npm_graphics2/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/luca-gandolfi-531a93214
-[product-screenshot]: demo.png
+[product-screenshot]: demos/demo.png

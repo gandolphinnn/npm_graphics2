@@ -27,10 +27,7 @@
 	<ol>
 		<li><a href="#about-the-project">About The Project</a></li>
 		<li>
-			<a href="#getting-started">Getting Started</a>
-			<ul>
-				<li><a href="#installation">Installation</a></li>
-			</ul>
+			<a href="#installation">Installation</a>
 		</li>
 		<li>
 			<a href="#usage">Usage</a>
@@ -59,11 +56,8 @@ To get a local copy up and running follow these simple example steps.
 
 ### Installation
 
-This is an example of how to list things you need to use the software and how to install them.
-
-- npm
   ```sh
-  npm install @gandolphinnn/graphics2
+  npm i @gandolphinnn/graphics2
   ```
 
 <!-- USAGE EXAMPLES -->

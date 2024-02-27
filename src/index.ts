@@ -39,12 +39,16 @@ export class Coord {
 		return this;
 	}
 
+	static get default() {
+		return new Coord(0, 0);
+	}
+	//? sum x/y to a coordinate
 	static sumXY(coord: Coord, x: number, y: number) {
 		return new Coord(coord.x + x, coord.y + y)
 	}
 	//? sum every coordinate
 	static sum(...coords: Coord[]) {
-		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), new Coord(0, 0));
+		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), Coord.default);
 	}
 	//? get the center of multiple points
 	static center(...coords: Coord[]) {
@@ -459,8 +463,8 @@ export class MainCanvas extends Singleton {
 		const colors = Object.keys(COLORNAME_RGBA);
 		const maxY = Math.floor(this.cnv.width / scale);
 		let x: number, y: number;
-		const rect = new Rect(new Coord(0,0), {height:scale, width: scale});
-		const text = new Text(new Coord(0,0), 'asd');
+		const rect = new Rect(Coord.default, {height:scale, width: scale});
+		const text = new Text(Coord.default, 'asd');
 		text.style.mergeFont('10px Arial');
 		for (let i = 0; i < colors.length; i++) {
 			y = Math.floor(i/maxY);
@@ -481,7 +485,7 @@ export class MainCanvas extends Singleton {
 							.sort((a, b) => a-b);
 		let coord = new Coord(this.center.x - 500, this.center.y - (30 * sampleUnits.length / 2));
 
-		const line = new Line(new Coord(0,0), new Coord(0,0));
+		const line = new Line(Coord.default, Coord.default);
 		line.style.mergeLineWidth(4);
 		const text = new Text(coord, '');
 		text.style.mergeFont('20px Arial').mergeTextAlign('right');
@@ -498,7 +502,7 @@ export class MainCanvas extends Singleton {
 	drawSampleMetric(scale = 50) {
 		scale = clamp(scale, 25, Infinity);
 
-		const line = new Line(new Coord(0, 0), new Coord(0, this.cnv.height));
+		const line = new Line(Coord.default, new Coord(0, this.cnv.height));
 		line.style.mergeLineWidth(1).mergeStrokeStyle(Color.byName('Black', .3));
 		const text = new Text(new Coord(0, 10), '');
 		text.style.mergeTextAlign('right').mergeFillStyle(Color.byName('Black', .5));
@@ -511,7 +515,7 @@ export class MainCanvas extends Singleton {
 			text.render();
 		}
 
-		line.points = [new Coord(0, 0), new Coord(this.cnv.width, 0)];
+		line.points = [Coord.default, new Coord(this.cnv.width, 0)];
 		text.style.mergeTextAlign('left');
 
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
@@ -529,6 +533,6 @@ export class MainCanvas extends Singleton {
 //#endregion
 
 //#region Constants
-const POINT_DEFAULT = new Circle(new Coord(0,0), 3).setAction(RenderAction.Fill);
+const POINT_DEFAULT = new Circle(Coord.default, 3).setAction(RenderAction.Fill);
 	POINT_DEFAULT.style.mergeFillStyle(Color.byName('Black'));
 //#endregion

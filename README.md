@@ -1,14 +1,3 @@
-<style>
-	td.demo {
-		padding: 0px;
-	}
-	td.demo * {
-		width: 100%;
-		height: 100%;
-	}
-</style>
-
-
 <a name="readme-top"></a>
 
 [![Contributors][contributors-shield]][contributors-url]
@@ -24,6 +13,7 @@
 <h3 align="center">npm_graphics2</h3>
 
   <p align="center">
+	***WIP DOCUMENTATION***
     A high-level TypeScript framework availble on NPM to easily perform scripting on a canvas
     <br>
     <a href="https://github.com/gandolphinnn/npm_graphics2">Explore the repo</a>
@@ -120,13 +110,12 @@ It has 5 main properties: fillStyle, strokeStyle, lineWidth, textAlign, and font
 		</tr>
 		<tr>
 			<td>font</td>
-			<td>Font</td>
+			<td>string</td>
 		</tr>
 	</tbody>
 </table>
 
 The SubStyle type is a union type that can be a Color, CanvasGradient, or CanvasPattern.
-The Font type is a string that represents a font in the format of ${number}px ${string}.
 
 The Style class can also perform merge operations with other Style instances using the merge method: it is used to override the properties of the current Style with the properties of another Style.
 Undefined properties are not overridden, null properties set the merged property to undefind.
@@ -155,7 +144,7 @@ An enum used by every CnvElement to
 <summary>Mesh</summary>
 A group of CnvElements with a user-defined center.
 </details>
-<details>
+<adetails>
 <summary>CnvElement</summary>
 CnvDrawing is an abstract child of CnvElement and is the parent of all of the following classes, Text excluded.
 	<table>
@@ -173,38 +162,35 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 				<td colspan="3">center: Coord</td>
 				<td colspan="3">content: string</td>
 				<td>Fill</td>
-				<td></td>
-				<td></td>
+				<td style="padding: 0px;"><img src="demos/demo_text1.png"></td>
+				<td style="padding: 0px;"><img src="demos/demo_text2.png"></td>
 			</tr>
 			<tr>
 				<td>Line</td>
 				<td colspan="3">point1: Coord</td>
 				<td colspan="3">point2: Coord</td>
 				<td>Stroke</td>
-				<td colspan="2" class="demo"><img src="demos/demo_line.png"></td>
+				<td colspan="2" style="padding: 0px;"><img src="demos/demo_line.png"></td>
 			</tr>
 			<tr>
 				<td>Rect</td>
 				<td colspan="3">center: Coord</td>
 				<td colspan="3">size: Size</td>
 				<td>Both</td>
-				<td></td>
-				<td></td>
+				<td colspan="2" style="padding: 0px;"><img src="demos/demo_rect.png"></td>
 			</tr>
 			<tr>
 				<td>Poly</td>
 				<td colspan="6">...points: Coord[]</td>
 				<td>Both</td>
-				<td></td>
-				<td></td>
+				<td colspan="2" style="padding: 0px;"><img src="demos/demo_poly.png"></td>
 			</tr>
 			<tr>
 				<td>Circle</td>
 				<td colspan="3">center: Coord</td>
 				<td colspan="3">radius: number</td>
 				<td>Both</td>
-				<td></td>
-				<td></td>
+				<td colspan="2" style="padding: 0px;"><img src="demos/demo_circle.png"></td>
 			</tr>
 			<tr>
 				<td>Arc</td>
@@ -215,12 +201,12 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 				<td>counterClockwise = true</td>
 				<td>cutByCenter = true</td>
 				<td>Both</td>
-				<td></td>
-				<td></td>
+				<td style="padding: 0px;"><img src="demos/demo_arc1.png"></td>
+				<td style="padding: 0px;"><img src="demos/demo_arc2.png"></td>
 			</tr>
 		</tbody>
 	</table>
-</details>
+</adetails>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

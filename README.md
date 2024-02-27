@@ -11,9 +11,9 @@
 <div align="center">
 
 <h3 align="center">npm_graphics2</h3>
+<h4 align="center">DISCLAIMER: THIS DOCUMENTATION IS STILL WIP</h4>
 
   <p align="center">
-	***WIP DOCUMENTATION***
     A high-level TypeScript framework availble on NPM to easily perform scripting on a canvas
     <br>
     <a href="https://github.com/gandolphinnn/npm_graphics2">Explore the repo</a>
@@ -46,6 +46,8 @@
 
 ## About The Project
 
+TODO
+
 ![Demo Screen Shot][product-screenshot]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -56,6 +58,8 @@
   npm i @gandolphinnn/graphics2
   ```
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- USAGE EXAMPLES -->
 
 ## Usage
@@ -64,7 +68,10 @@ Style.ts is used to modify the style of the CnvElements (see Index > CnvElements
 You don't need to import this file because it's already exported by Index.ts.
 Index.ts contains multiple types, enums and classes to draw and write inside the canvas.
 The HTML canvas is managed by the MainCanvas Singleton.
-Coord, Angle. //WIP Usage documentation
+Coord, Angle.
+TODO
+
+<a name="style"></a>
 
 ### Style.ts
 <details>
@@ -123,7 +130,10 @@ The empty and default methods create an empty and default Style, respectively.
 These methods return the Style instance itself, allowing the methods to be chained together.
 </details>
 
+<a name="index"></a>
+
 ### Index.ts
+TODO
 <details>
 <summary>RenderAction</summary>
 An enum used by every CnvElement to 
@@ -144,7 +154,7 @@ An enum used by every CnvElement to
 <summary>Mesh</summary>
 A group of CnvElements with a user-defined center.
 </details>
-<adetails>
+<details>
 <summary>CnvElement</summary>
 CnvDrawing is an abstract child of CnvElement and is the parent of all of the following classes, Text excluded.
 	<table>
@@ -162,35 +172,35 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 				<td colspan="3">center: Coord</td>
 				<td colspan="3">content: string</td>
 				<td>Fill</td>
-				<td style="padding: 0px;"><img src="demos/demo_text1.png"></td>
-				<td style="padding: 0px;"><img src="demos/demo_text2.png"></td>
+				<td><img src="demos/demo_text1.png"></td>
+				<td><img src="demos/demo_text2.png"></td>
 			</tr>
 			<tr>
 				<td>Line</td>
 				<td colspan="3">point1: Coord</td>
 				<td colspan="3">point2: Coord</td>
 				<td>Stroke</td>
-				<td colspan="2" style="padding: 0px;"><img src="demos/demo_line.png"></td>
+				<td colspan="2"><img src="demos/demo_line.png"></td>
 			</tr>
 			<tr>
 				<td>Rect</td>
 				<td colspan="3">center: Coord</td>
 				<td colspan="3">size: Size</td>
 				<td>Both</td>
-				<td colspan="2" style="padding: 0px;"><img src="demos/demo_rect.png"></td>
+				<td colspan="2"><img src="demos/demo_rect.png"></td>
 			</tr>
 			<tr>
 				<td>Poly</td>
 				<td colspan="6">...points: Coord[]</td>
 				<td>Both</td>
-				<td colspan="2" style="padding: 0px;"><img src="demos/demo_poly.png"></td>
+				<td colspan="2"><img src="demos/demo_poly.png"></td>
 			</tr>
 			<tr>
 				<td>Circle</td>
 				<td colspan="3">center: Coord</td>
 				<td colspan="3">radius: number</td>
 				<td>Both</td>
-				<td colspan="2" style="padding: 0px;"><img src="demos/demo_circle.png"></td>
+				<td colspan="2"><img src="demos/demo_circle.png"></td>
 			</tr>
 			<tr>
 				<td>Arc</td>
@@ -201,12 +211,12 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 				<td>counterClockwise = true</td>
 				<td>cutByCenter = true</td>
 				<td>Both</td>
-				<td style="padding: 0px;"><img src="demos/demo_arc1.png"></td>
-				<td style="padding: 0px;"><img src="demos/demo_arc2.png"></td>
+				<td><img src="demos/demo_arc1.png"></td>
+				<td><img src="demos/demo_arc2.png"></td>
 			</tr>
 		</tbody>
 	</table>
-</adetails>
+</details>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

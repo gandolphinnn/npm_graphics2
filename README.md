@@ -1,3 +1,14 @@
+<style>
+	td.demo {
+		padding: 0px;
+	}
+	td.demo * {
+		width: 100%;
+		height: 100%;
+	}
+</style>
+
+
 <a name="readme-top"></a>
 
 [![Contributors][contributors-shield]][contributors-url]
@@ -49,12 +60,7 @@
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Installation
+## Installation
 
   ```sh
   npm i @gandolphinnn/graphics2
@@ -175,7 +181,7 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 				<td colspan="3">point1: Coord</td>
 				<td colspan="3">point2: Coord</td>
 				<td>Stroke</td>
-				<td colspan="2"><img src="demos/demo_line.png"></td>
+				<td colspan="2" class="demo"><img src="demos/demo_line.png"></td>
 			</tr>
 			<tr>
 				<td>Rect</td>
@@ -224,7 +230,7 @@ CnvDrawing is an abstract child of CnvElement and is the parent of all of the fo
 
 Any contributions you make are **greatly appreciated**.
 
-Feel free to assign yourself an open issue or open a new one.
+Feel free to assign yourself an open issue or create a new one.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request.
 You can also simply open an issue with the tag "enhancement".

@@ -33,7 +33,7 @@ export class Coord {
 	/**
 	 * sum x/y to THIS coordinate
 	 */
-	moveXY(x: number, y: number) {
+	sumXY(x: number, y: number) {
 		this.x += x;
 		this.y += y;
 		return this;
@@ -68,6 +68,19 @@ export class Coord {
 	//? diagonal distance between 2 points
 	static distance(coord1: Coord, coord2: Coord) {
 		return Math.sqrt(((coord1.x - coord2.x) ** 2) + ((coord1.y - coord2.y) ** 2));
+	}
+	//? rotate some coordinates around a center by an angle
+	static rotate(center: Coord, angle: Angle, ...coords: Coord[]) {
+		return coords.map(coord => {
+			const x = center.x + (coord.x - center.x) * angle.cos - (coord.y - center.y) * angle.sin;
+			const y = center.y + (coord.x - center.x) * angle.sin + (coord.y - center.y) * angle.cos;
+			return new Coord(x, y);
+		});
+	}
+	//? generate the coordinates of the points of a regular polygon
+	static regularSpread(center: Coord, numberOfCoord: number, distance: number) {
+		const angle = 2 * Math.PI / numberOfCoord;
+		return Enumerable.range(0, numberOfCoord).select(i => new Coord(Math.cos(i * angle) * distance + center.x, Math.sin(i * angle) * distance + center.y)).toArray();
 	}
 };
 /**
@@ -134,7 +147,7 @@ export class Mesh {
 	}
 	moveBy(x: number, y: number) {
 		//? keep it like this to trigger the setter
-		this.center.moveXY(x, y);
+		this.center.sumXY(x, y);
 		this.items.forEach(item => {
 			item.moveBy(x, y);
 		});
@@ -166,7 +179,7 @@ export abstract class CnvElement {
 	}
 	moveBy(x: number, y: number) {
 		//? keep it like this to trigger the setter
-		this.center = this.center.moveXY(x, y)
+		this.center = this.center.sumXY(x, y)
 		return this;
 	}
 	setZ(zIndex: number) {
@@ -236,8 +249,8 @@ export class Line extends CnvDrawing {
 	set center(center: Coord) {
 		const diff = Coord.difference(center, this.center)
 		this._center = center;
-		this.points[0].moveXY(diff.x, diff.y)
-		this.points[1].moveXY(diff.x, diff.y)
+		this.points[0].sumXY(diff.x, diff.y)
+		this.points[1].sumXY(diff.x, diff.y)
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.style, () => {
@@ -305,7 +318,7 @@ export class Poly extends CnvDrawing {
 		const diff = Coord.difference(center, this.center)
 		this._center = center;
 		this.points.forEach(point => {
-			point.moveXY(diff.x, diff.y)
+			point.sumXY(diff.x, diff.y)
 		});
 	}
 	constructor(...points: Coord[]) {
@@ -496,7 +509,7 @@ export class MainCanvas extends Singleton {
 			text.content = unit.toString();
 			line.render()
 			text.render(); 
-			coord.moveXY(0, 30);
+			coord.sumXY(0, 30);
 		});
 	}
 	drawSampleMetric(scale = 50) {

@@ -364,33 +364,59 @@ export class Circle extends CnvDrawing {
 		return this;
 	}
 }
-export class Arc extends CnvDrawing {
+//TODO extends Circle
+export class CircleSector extends CnvDrawing {
 	radius: number;
 	start: Angle;
 	end: Angle;
 	counterClockwise: boolean;
-	cutByCenter: boolean;
 
 	get theta() { return new Angle(this.counterClockwise? this.end.degrees - this.start.degrees: this.start.degrees - this.end.degrees) }
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
 
-	constructor(center: Coord, radius: number, start: Angle, end: Angle, counterClockwise = true, cutByCenter = true) {
+	constructor(center: Coord, radius: number, start: Angle, end: Angle, counterClockwise = true) {
 		super(RenderAction.Both, center);
 		this.radius = radius;
 		this.start = start; 
 		this.end = end; 
 		this.counterClockwise = counterClockwise;
-		this.cutByCenter = cutByCenter;
 	}
 	render(drawPoints = false) {
 		MainCanvas.get.draw(this.style, () => {
 			this.ctx.beginPath();
 			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
-			if (this.cutByCenter) {
-				this.ctx.lineTo(this.center.x, this.center.y);
-			}
+			this.ctx.lineTo(this.center.x, this.center.y);
+			this.ctx.closePath()
+			this.execAction();
+		});
+		if(drawPoints) this.drawPoints();
+		return this;
+	}
+}
+export class CircleSlice extends CnvDrawing {
+	radius: number;
+	start: Angle;
+	end: Angle;
+	counterClockwise: boolean;
+
+	get theta() { return new Angle(this.counterClockwise? this.end.degrees - this.start.degrees: this.start.degrees - this.end.degrees) }
+
+	get diameter() { return this.radius * 2 }
+	set diameter(diameter: number) { this.radius = diameter / 2 }
+
+	constructor(center: Coord, radius: number, start: Angle, end: Angle, counterClockwise = true) {
+		super(RenderAction.Both, center);
+		this.radius = radius;
+		this.start = start; 
+		this.end = end; 
+		this.counterClockwise = counterClockwise;
+	}
+	render(drawPoints = false) {
+		MainCanvas.get.draw(this.style, () => {
+			this.ctx.beginPath();
+			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
 			this.ctx.closePath()
 			this.execAction();
 		});
@@ -539,7 +565,7 @@ export class MainCanvas extends Singleton {
 			text.content = y.toString();
 			text.render();
 		}
-		new Circle(this.center, 5).render();
+		//new Circle(this.center, 5).render();
 	}
 	//#endregion
 }

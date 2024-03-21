@@ -1,4 +1,4 @@
-import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Arc, Angle, Mesh, RenderAction,} from './index.js';
+import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Angle, Mesh, RenderAction, CircleSector, CircleSlice } from './index.js';
 import { test } from '@gandolphinnn/utils';
 
 /* test('rgbParse INVALID', parseRGBA(''), null);
@@ -14,7 +14,7 @@ c1.drawSampleMetric(50);
 c1.drawStyle.mergeFillStyle(Color.byName('Grey'));
 c1.writeStyle.mergeTextAlign('center').mergeFont('40px arial');
 
-const centerArc	= new Arc(new Coord(274, 200), 75, new Angle(250), new Angle(0), false, true).setZ(0);
+const centerArc	= new CircleSector(new Coord(274, 200), 75, new Angle(250), new Angle(0), false).setZ(0);
 centerArc.style.mergeFillStyle(Color.byName('SpringGreen'));
 
 const circle	= new Circle(new Coord(227.9, 200), 75).setZ(1);
@@ -26,13 +26,13 @@ poly.style.mergeStrokeStyle(Color.byName('SaddleBrown')).mergeLineWidth(3).merge
 const line		= new Line(poly.lines[0].center, poly.lines[2].center).setZ(3);
 line.style.mergeStrokeStyle(Color.byName('SaddleBrown')).mergeLineWidth(3);
 
-const arc		= new Arc(new Coord(250, 100), 141.4, new Angle(45), new Angle(135), false, false).setZ(3).setAction(RenderAction.Stroke);
+const arc		= new CircleSlice(new Coord(250, 100), 141.4, new Angle(45), new Angle(135), false).setZ(3).setAction(RenderAction.Stroke);
 arc.style.mergeStrokeStyle(Color.byName('SaddleBrown')).mergeLineWidth(3);
 
 const text		= new Text(new Coord(250, 300), 'TEST').setZ(4).setAction(RenderAction.None);
 const mesh		= new Mesh(new Coord(250, 400), text, line, circle, arc, centerArc, poly);
 console.table(mesh.items.toArray());
 
-mesh.moveBy(600, -50).render(true)
-mesh.moveBy(300, -50).render()
+mesh.moveBy(600, -50).update(true)
+mesh.moveBy(300, -50).update()
 /* */

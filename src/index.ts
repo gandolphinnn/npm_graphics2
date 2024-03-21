@@ -5,9 +5,9 @@ import Enumerable from 'linq';
 export * from './style.js';
 
 //#region Interfaces, Enums, Types
-export interface Component { //? This will be useful later, in rigid2 and game2
-	start(): void;
-	update(): void;
+export abstract class Component { //? This will be useful later, in rigid2 and game2
+	start?(): void;
+	update?(): void;
 }
 export enum RenderAction {
 	None, Stroke, Fill, Both
@@ -111,24 +111,31 @@ export class Angle {
 		this._radians = this._degrees * Math.PI / 180; //? Convert to radians
 	}
 	//#region Trigonometric functions
-	get sin() { return Math.sin(this._radians); }
-	get cos() { return Math.cos(this._radians); }
-	get tan() { return Math.tan(this._radians); }
-	get asin() { return Math.asin(this._radians); }
-	get acos() { return Math.acos(this._radians); }
-	get atan() { return Math.atan(this._radians); }
-	get sinh() { return Math.sinh(this._radians); }
-	get cosh() { return Math.cosh(this._radians); }
-	get tanh() { return Math.tanh(this._radians); }
-	get asinh() { return Math.asinh(this._radians); }
-	get acosh() { return Math.acosh(this._radians); }
-	get atanh() { return Math.atanh(this._radians); }
+	get sin() { return Math.sin(this._radians) }
+	get cos() { return Math.cos(this._radians) }
+	get tan() { return Math.tan(this._radians) }
+	get asin() { return Math.asin(this._radians) }
+	get acos() { return Math.acos(this._radians) }
+	get atan() { return Math.atan(this._radians) }
+	get sinh() { return Math.sinh(this._radians) }
+	get cosh() { return Math.cosh(this._radians) }
+	get tanh() { return Math.tanh(this._radians) }
+	get asinh() { return Math.asinh(this._radians) }
+	get acosh() { return Math.acosh(this._radians) }
+	get atanh() { return Math.atanh(this._radians) }
+	//#endregion
+
+	//#region Statics
+	static get right() { return new Angle(0) }
+	static get left() { return new Angle(180) }
+	static get up() { return new Angle(270) }
+	static get down() { return new Angle(90) }
 	//#endregion
 }
 /**
  * A collection of CnvElements
  */
-export class Mesh {
+export class Mesh extends Component {
 	_center: Coord;
 	items: Enumerable.IEnumerable<CnvElement>;
 	zIndex: number;
@@ -142,6 +149,7 @@ export class Mesh {
 		this.moveBy(diff.x, diff.y);
 	}
 	constructor(center: Coord, ...items: CnvElement[]) {
+		super();
 		this._center = center;
 		this.items = Enumerable.from(items);
 	}
@@ -153,13 +161,16 @@ export class Mesh {
 		});
 		return this;
 	}
-	render(drawPoints = false) {
+	update(drawPoints = false) {
 		if (this.visible) {
 			this.items.orderBy(elem => elem.zIndex).forEach(item => {
 				item.render(drawPoints);
 			});
 		}
 		if(drawPoints) MainCanvas.get.drawPoint(this.center);
+	}
+	render(drawPoints = false) {
+		this.update(drawPoints);
 	}
 }
 //#region CanvasElements
@@ -364,7 +375,7 @@ export class Circle extends CnvDrawing {
 		return this;
 	}
 }
-//TODO extends Circle
+//? Goes through the center
 export class CircleSector extends CnvDrawing {
 	radius: number;
 	start: Angle;

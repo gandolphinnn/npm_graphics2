@@ -48,29 +48,26 @@ export class Color {
 	}
 }
 export class Style {
-	private _fillStyle?: SubStyle
-	private _strokeStyle?: SubStyle
-	private _lineWidth?: number
+	fillStyle?: SubStyle
+	strokeStyle?: SubStyle
+	lineWidth?: number
 	/**
 	 * @example "left" means the center is just to the left of the text
 	*/
-	private _textAlign?: CanvasTextAlign
-	private _font?: string
+	textAlign?: CanvasTextAlign
+	font?: string
 
-	get fillStyle() { return this._fillStyle }
-	get fillStyleVal() { return getSubStyleValue(this._fillStyle) }
-	get strokeStyle() { return this._strokeStyle }
-	get strokeStyleVal() { return getSubStyleValue(this._strokeStyle) }
+	get fillStyleVal() { return getSubStyleValue(this.fillStyle) }
+	set fillStyleVal(subStyleValue: string | CanvasGradient | CanvasPattern) { this.fillStyle = setSubStyleValue(subStyleValue) }
+	get strokeStyleVal() { return getSubStyleValue(this.strokeStyle) }
+	set strokeStyleVal(subStyleValue: string | CanvasGradient | CanvasPattern) { this.strokeStyle = setSubStyleValue(subStyleValue) }
 
-	get lineWidth() { return this._lineWidth }
-	get textAlign() { return this._textAlign }
-	get font() { return this._font }
 	constructor(fillStyle?: SubStyle, strokeStyle?: SubStyle, lineWidth?: number, textAlign?: CanvasTextAlign, font?: string) {
-		this._fillStyle = fillStyle;
-		this._strokeStyle = strokeStyle;
-		this._lineWidth = lineWidth;
-		this._textAlign = textAlign;
-		this._font = font;
+		this.fillStyle = fillStyle;
+		this.strokeStyle = strokeStyle;
+		this.lineWidth = lineWidth;
+		this.textAlign = textAlign;
+		this.font = font;
 	}
 	/**
 	 * undefined is for not specified values
@@ -88,23 +85,23 @@ export class Style {
 		}
 	}
 	mergeFillStyle(newFillStyle: SubStyle, keepNulls = false) {
-		this._fillStyle = this.mergeProperty(this.fillStyleVal, newFillStyle, keepNulls);
+		this.fillStyle = this.mergeProperty(this.fillStyleVal, newFillStyle, keepNulls);
 		return this;
 	}
 	mergeStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
-		this._strokeStyle = this.mergeProperty(this.strokeStyleVal, newStrokeStyle, keepNulls);
+		this.strokeStyle = this.mergeProperty(this.strokeStyleVal, newStrokeStyle, keepNulls);
 		return this;
 	}
 	mergeLineWidth(newLineWidth: number, keepNulls = false) {
-		this._lineWidth = this.mergeProperty(this.lineWidth, newLineWidth, keepNulls);
+		this.lineWidth = this.mergeProperty(this.lineWidth, newLineWidth, keepNulls);
 		return this;
 	}
 	mergeTextAlign(newTextAlign: CanvasTextAlign, keepNulls = false) {
-		this._textAlign = this.mergeProperty(this.textAlign, newTextAlign, keepNulls);
+		this.textAlign = this.mergeProperty(this.textAlign, newTextAlign, keepNulls);
 		return this;
 	}
 	mergeFont(newFont: string, keepNulls = false) {
-		this._font = this.mergeProperty(this.font, newFont, keepNulls);
+		this.font = this.mergeProperty(this.font, newFont, keepNulls);
 		return this;
 	}
 	mergeWith(newStyle: Style, keepNulls = false) {
@@ -155,7 +152,10 @@ export function parseRGBA(str: string) {
  * If the style object is a Color, return its rgbaStr, otherwise return the object
  */
 export function getSubStyleValue(style: SubStyle) {
-	return style instanceof Color? style.rgbaStr : style
+	return style instanceof Color? style.rgbaStr : style;
+}
+export function setSubStyleValue(value: string | CanvasGradient | CanvasPattern) {
+	return typeof value == 'string'? Color.byStr(value) : value;
 }
 //#endregion
 

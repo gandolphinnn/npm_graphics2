@@ -82,6 +82,21 @@ export class Coord {
 		const angle = 2 * Math.PI / numberOfCoord;
 		return Enumerable.range(0, numberOfCoord).select(i => new Coord(Math.cos(i * angle) * distance + center.x, Math.sin(i * angle) * distance + center.y)).toArray();
 	}
+	static encircle(...points: Coord[]): Circle {
+		let maxDist = -1;
+		let center: Coord;
+		for (let i = 0; i < points.length; i++) {
+			const p1 = points[i];
+			const p2 = points[overflow(i + 1, 0, points.length)];
+			const distance = this.distance(p1, p2);
+			if (distance > maxDist) {
+				maxDist = distance;
+				center = this.center(p1, p2);
+			}
+		}
+		return new Circle(center, maxDist / 2);
+	}
+	
 };
 /**
  * Angle starts from a line going horizontally right from the center, and proceeds clockwise.

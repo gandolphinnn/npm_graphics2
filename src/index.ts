@@ -96,7 +96,15 @@ export class Coord {
 		}
 		return new Circle(center, maxDist / 2);
 	}
-	
+	static starPoints(center: Coord, radius: number, points: number, innerRadius: number) {
+		const angle = Math.PI / points;
+		const coords = [];
+		for (let i = 0; i < 2 * points; i++) {
+			const r = i % 2 == 0 ? radius : innerRadius;
+			coords.push(new Coord(center.x + r * Math.cos(i * angle), center.y + r * Math.sin(i * angle)));
+		}
+		return coords;
+	}
 };
 /**
  * Angle starts from a line going horizontally right from the center, and proceeds clockwise.
@@ -581,6 +589,11 @@ export class MainCanvas extends Singleton {
 			text.render();
 		}
 		//new Circle(this.center, 5).render();
+	}
+	drawTriangle(center: Coord, size: number, angle: Angle) {
+		let points = Coord.regularSpread(center, 3, size);
+		points = Coord.rotate(center, angle, ...points);
+		new Poly(...points).render();
 	}
 	//#endregion
 }

@@ -15,50 +15,57 @@ export interface Component { //? This will be useful later, in rigid2 and game2
 }
 
 export class MainCanvas extends Singleton {
-	static get get() { return this.singletonInstance as MainCanvas }
-
-	readonly cnv: HTMLCanvasElement;
-	readonly ctx: CanvasRenderingContext2D;
-	
-	_center: Coord;
-	get center() { return this._center }
-	
-	drawStyle = Style.default();
-	writeStyle = Style.default();
-
-	get bgColor() { return Color.byStr(this.cnv.style.backgroundColor) }
-	set bgColor(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
-
+	private static _MainCanvas: Singleton = new MainCanvas();
+	private static get instance() {
+		return this._MainCanvas as MainCanvas;
+	};
 	private constructor() {
 		super();
 		const body = document.querySelector('body')!;
-		this.cnv = body.querySelectorAll('canvas')[0];
+		this._cnv = body.querySelectorAll('canvas')[0];
 
-		if (isNull(this.cnv)) {
+		if (isNull(this._cnv)) {
 			body.innerHTML = '';
-			this.cnv = document.createElement('canvas');
-			this.cnv.width = window.innerWidth;
-			this.cnv.height = window.innerHeight;
+			this._cnv = document.createElement('canvas');
+			this._cnv.width = window.innerWidth;
+			this._cnv.height = window.innerHeight;
 			body.style.overflow = 'hidden';
 			body.style.margin = '0px';
-			body.appendChild(this.cnv);
+			body.appendChild(this._cnv);
 		}
 		
-		this.ctx = this.cnv.getContext('2d')!;
-		this._center = new Coord(this.cnv.width / 2, this.cnv.height / 2);
+		this._ctx = this._cnv.getContext('2d')!;
+		this._center = new Coord(this._cnv.width / 2, this._cnv.height / 2);
 		console.log('Main canvas set');
 	}
+
+	_cnv: HTMLCanvasElement;
+	static get cnv() { return this.instance._cnv };
+	private static set cnv(cnv: HTMLCanvasElement) { this.instance._cnv = cnv };
+
+	_ctx: CanvasRenderingContext2D;
+	static get ctx() { return this.instance._ctx };
+	private static set ctx(ctx: CanvasRenderingContext2D) { this.instance._ctx = ctx };
+	
+	_center: Coord;
+	static get center() { return this.instance._center }
+	
+	static drawStyle = Style.default();
+	static writeStyle = Style.default();
+
+	static get bgColor() { return Color.byStr(this.cnv.style.backgroundColor) }
+	static set bgColor(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
 
 	/**
 	 * Clear the entire canvas
 	 */
-	clean() {
+	static clean() {
 		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
 	}
 	/**
 	 * Save the context, apply the style, execute the callback and restore the context
 	 */
-	draw(drawStyle: Style, renderCallBack: Function) {
+	static draw(drawStyle: Style, renderCallBack: Function) {
 		this.ctx.save();		
 		const toApply = Style.from(this.drawStyle, drawStyle);
 		this.ctx.fillStyle = toApply.fillStyleVal;
@@ -67,7 +74,7 @@ export class MainCanvas extends Singleton {
 		renderCallBack();
 		this.ctx.restore();
 	}
-	write(writeStyle: Style, renderCallBack: Function) {
+	static write(writeStyle: Style, renderCallBack: Function) {
 		this.ctx.save();		
 		const toApply = Style.from(this.writeStyle, writeStyle);
 		this.ctx.fillStyle = toApply.fillStyleVal;
@@ -79,11 +86,11 @@ export class MainCanvas extends Singleton {
 		this.ctx.restore();
 	}
 
-	drawPoint(point: Coord) {
+	static drawPoint(point: Coord) {
 		POINT_DEFAULT.center = point.copy();
 		POINT_DEFAULT.render();
 	}
-	drawSampleColors() {
+	static drawSampleColors() {
 		const scale = 100;
 		const whiteTextThreshold = 250;
 		const colors = Object.keys(COLORNAME_RGBA);
@@ -105,7 +112,7 @@ export class MainCanvas extends Singleton {
 			text.render();
 		}
 	}
-	drawSampleUnits(...testUnits: number[]) {		
+	static drawSampleUnits(...testUnits: number[]) {		
 		let sampleUnits = [...new Set([1, 5, 10, 50, 100, 250, 500, 1000, ...testUnits])]
 							.filter(v => v > 0)
 							.sort((a, b) => a-b);
@@ -125,7 +132,7 @@ export class MainCanvas extends Singleton {
 			coord.sumXY(0, 30);
 		});
 	}
-	drawSampleMetric(scale = 50) {
+	static drawSampleMetric(scale = 50) {
 		scale = clamp(scale, 25, Infinity);
 
 		const line = new Line(Coord.default, new Coord(0, this.cnv.height));
@@ -152,12 +159,7 @@ export class MainCanvas extends Singleton {
 			text.content = y.toString();
 			text.render();
 		}
-		//new Circle(this.center, 5).render();
-	}
-	drawTriangle(center: Coord, size: number, angle: Angle) {
-		let points = Coord.regularSpread(center, 3, size);
-		points = Coord.rotate(center, angle, ...points);
-		new Poly(...points).render();
+		new Circle(this.center, 5).render();
 	}
 }
 

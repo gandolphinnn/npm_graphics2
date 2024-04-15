@@ -9,7 +9,6 @@ export enum RenderAction {
 }
 
 export abstract class CnvElement {
-	readonly ctx = MainCanvas.get.ctx;
 	action: RenderAction;
 	style: Style = Style.empty();
 	zIndex = 0;
@@ -39,16 +38,16 @@ export abstract class CnvElement {
 	abstract render(drawPoints: boolean): CnvElement;
 	protected execAction() {
 		if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {
-			this.ctx.fill();
+			MainCanvas.ctx.fill();
 		}
 		if (this.action == RenderAction.Both || this.action == RenderAction.Stroke) {
-			this.ctx.stroke();
+			MainCanvas.ctx.stroke();
 		}
-		this.ctx.closePath();
+		MainCanvas.ctx.closePath();
 	}
 	protected drawPoints(points: Coord[] = []) {
 		[this.center, ...points].forEach(point => {
-			MainCanvas.get.drawPoint(point);
+			MainCanvas.drawPoint(point);
 		});
 	}
 }
@@ -83,7 +82,7 @@ export class Mesh extends CnvElement implements Component {
 				item.render(drawPoints);
 			});
 		}
-		if(drawPoints) MainCanvas.get.drawPoint(this.center);
+		if(drawPoints) MainCanvas.drawPoint(this.center);
 	}
 	render(drawPoints = false) {
 		this.update(drawPoints);
@@ -98,12 +97,12 @@ export class Text extends CnvElement {
 		this.content = content;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.write(this.style, () => {
+		MainCanvas.write(this.style, () => {
 			if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {
-				this.ctx.fillText(this.content, this.center.x, this.center.y);
+				MainCanvas.ctx.fillText(this.content, this.center.x, this.center.y);
 			}
 			if (this.action == RenderAction.Both || this.action == RenderAction.Stroke) {
-				this.ctx.strokeText(this.content, this.center.x, this.center.y);
+				MainCanvas.ctx.strokeText(this.content, this.center.x, this.center.y);
 			}
 		})
 		if(drawPoints) this.drawPoints();
@@ -136,10 +135,10 @@ export class Line extends CnvDrawing {
 		this.points[1].sumXY(diff.x, diff.y)
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
-			this.ctx.beginPath();
-			this.ctx.moveTo(this.points[0].x, this.points[0].y);
-			this.ctx.lineTo(this.points[1].x, this.points[1].y);
+		MainCanvas.draw(this.style, () => {
+			MainCanvas.ctx.beginPath();
+			MainCanvas.ctx.moveTo(this.points[0].x, this.points[0].y);
+			MainCanvas.ctx.lineTo(this.points[1].x, this.points[1].y);
 			this.execAction();
 		});
 		if(drawPoints) this.drawPoints(this.points);
@@ -167,9 +166,9 @@ export class Rect extends CnvDrawing {
 		this.size = size;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
-			this.ctx.beginPath();
-			this.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
+		MainCanvas.draw(this.style, () => {
+			MainCanvas.ctx.beginPath();
+			MainCanvas.ctx.rect(this.points[0].x, this.points[0].y, this.size.width, this.size.height);
 			this.execAction();
 		});
 		drawPoints? this.drawPoints(this.points) : null;
@@ -214,13 +213,13 @@ export class Poly extends CnvDrawing {
 	getPoint(index: number) { return this.points[overflow(index, 0, this.points.length-1)] }
 
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
-			this.ctx.beginPath();
-			this.ctx.moveTo(this.points[0].x, this.points[0].y);
+		MainCanvas.draw(this.style, () => {
+			MainCanvas.ctx.beginPath();
+			MainCanvas.ctx.moveTo(this.points[0].x, this.points[0].y);
 			this.points.forEach(point => {
-				this.ctx.lineTo(point.x, point.y)
+				MainCanvas.ctx.lineTo(point.x, point.y)
 			});
-			this.ctx.closePath();
+			MainCanvas.ctx.closePath();
 			this.execAction();
 		});
 		if(drawPoints) this.drawPoints(this.points);
@@ -238,9 +237,9 @@ export class Circle extends CnvDrawing {
 		this.radius = radius;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
-			this.ctx.beginPath();
-			this.ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
+		MainCanvas.draw(this.style, () => {
+			MainCanvas.ctx.beginPath();
+			MainCanvas.ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
 			this.execAction();
 		});
 		if(drawPoints) this.drawPoints();
@@ -267,11 +266,11 @@ export class CircleSector extends CnvDrawing {
 		this.counterClockwise = counterClockwise;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
-			this.ctx.beginPath();
-			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
-			this.ctx.lineTo(this.center.x, this.center.y);
-			this.ctx.closePath()
+		MainCanvas.draw(this.style, () => {
+			MainCanvas.ctx.beginPath();
+			MainCanvas.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
+			MainCanvas.ctx.lineTo(this.center.x, this.center.y);
+			MainCanvas.ctx.closePath()
 			this.execAction();
 		});
 		if(drawPoints) this.drawPoints();
@@ -297,10 +296,10 @@ export class CircleSlice extends CnvDrawing {
 		this.counterClockwise = counterClockwise;
 	}
 	render(drawPoints = false) {
-		MainCanvas.get.draw(this.style, () => {
-			this.ctx.beginPath();
-			this.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
-			this.ctx.closePath()
+		MainCanvas.draw(this.style, () => {
+			MainCanvas.ctx.beginPath();
+			MainCanvas.ctx.arc(this.center.x, this.center.y, this.radius, this.start.radians, this.end.radians, this.counterClockwise);
+			MainCanvas.ctx.closePath()
 			this.execAction();
 		});
 		if(drawPoints) this.drawPoints();

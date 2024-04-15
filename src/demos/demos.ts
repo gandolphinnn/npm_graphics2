@@ -1,4 +1,4 @@
-import { Angle, Circle, CircleSector, CircleSlice, CnvElement, Color, Coord, Line, MainCanvas, Mesh, Poly, Rect, Style, Text } from './index.js';
+import { Angle, Circle, CircleSector, CircleSlice, CnvElement, Color, Coord, Line, MainCanvas, Mesh, Poly, Rect, Style, Text } from '../index.js';
 
 const c1 = MainCanvas.get;
 c1.drawSampleMetric();

@@ -1,4 +1,4 @@
-import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Angle, Mesh, RenderAction, CircleSector, CircleSlice } from './index.js';
+import { MainCanvas, Coord, Color, Text, Line, Poly, parseRGBA, RGBA, Circle, Angle, Mesh, RenderAction, CircleSector, CircleSlice } from '../index.js';
 import { test } from '@gandolphinnn/utils';
 
 /* test('rgbParse INVALID', parseRGBA(''), null);

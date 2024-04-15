@@ -1,4 +1,4 @@
-import { Angle, Circle, CircleSector, CircleSlice, Color, Coord, Line, MainCanvas, Mesh, Poly, Rect, Style, Text } from './index.js';
+import { Angle, Circle, CircleSector, CircleSlice, CnvElement, Color, Coord, Line, MainCanvas, Mesh, Poly, Rect, Style, Text } from './index.js';
 
 const c1 = MainCanvas.get;
 c1.drawSampleMetric();
@@ -13,8 +13,8 @@ text1.style.mergeFont('24px Arial').mergeTextAlign('center');
 const text2 = new Text(c1.center.sumXY(c1.cnv.width/6, 0), 'Hello World');
 text2.style.mergeFont('bold italic 30px serif').mergeTextAlign('left');
 
-//demo text
-const text = new Mesh(
+//demo texts
+const texts = new Mesh(
 	c1.center,
 	text1,
 	text2
@@ -38,7 +38,7 @@ const circleSector = new CircleSector(c1.center, 50, new Angle(), new Angle(45))
 //demo CircleSlice
 const circleSlice = new CircleSlice(c1.center, 50, new Angle(-80), new Angle(50), false);
 
-const demos = [ text, line, rect, poly, circle, circleSector, circleSlice ];
+const demos: CnvElement[] = [ texts, line, rect, poly, circle, circleSector, circleSlice ];
 
 const index = 4;
 demos[index].render(true);

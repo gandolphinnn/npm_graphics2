@@ -5,7 +5,7 @@ import Enumerable from 'linq';
 export * from './style.js';
 
 //#region Interfaces, Enums, Types
-export abstract class Component { //? This will be useful later, in rigid2 and game2
+export interface Component { //? This will be useful later, in rigid2 and game2
 	start?(): void;
 	update?(): void;
 }
@@ -155,47 +155,6 @@ export class Angle {
 	static up()		{ return new Angle(270) }
 	//#endregion
 }
-/**
- * A collection of CnvElements
- */
-export class Mesh extends Component {
-	_center: Coord;
-	items: Enumerable.IEnumerable<CnvElement>;
-	zIndex: number;
-	visible: boolean = true;
-	
-	get center() {
-		return this._center;
-	}
-	set center(center: Coord) {
-		const diff = Coord.difference(center, this.center);
-		this.moveBy(diff.x, diff.y);
-	}
-	constructor(center: Coord, ...items: CnvElement[]) {
-		super();
-		this._center = center;
-		this.items = Enumerable.from(items);
-	}
-	moveBy(x: number, y: number) {
-		//? keep it like this to trigger the setter
-		this.center.sumXY(x, y);
-		this.items.forEach(item => {
-			item.moveBy(x, y);
-		});
-		return this;
-	}
-	update(drawPoints = false) {
-		if (this.visible) {
-			this.items.orderBy(elem => elem.zIndex).forEach(item => {
-				item.render(drawPoints);
-			});
-		}
-		if(drawPoints) MainCanvas.get.drawPoint(this.center);
-	}
-	render(drawPoints = false) {
-		this.update(drawPoints);
-	}
-}
 //#region CanvasElements
 export abstract class CnvElement {
 	readonly ctx = MainCanvas.get.ctx;
@@ -239,6 +198,43 @@ export abstract class CnvElement {
 		[this.center, ...points].forEach(point => {
 			MainCanvas.get.drawPoint(point);
 		});
+	}
+}
+/**
+ * A collection of CnvElements
+ */
+export class Mesh extends CnvElement implements Component{
+	items: Enumerable.IEnumerable<CnvElement>;
+	zIndex: number;
+	visible: boolean = true;
+	
+	set center(center: Coord) {
+		const diff = Coord.difference(center, this.center);
+		this.moveBy(diff.x, diff.y);
+	}
+	constructor(center: Coord, ...items: CnvElement[]) {
+		super(RenderAction.Both, center);
+		this.items = Enumerable.from(items);
+	}
+	moveBy(x: number, y: number) {
+		//? keep it like this to trigger the setter
+		this.center.sumXY(x, y);
+		this.items.forEach(item => {
+			item.moveBy(x, y);
+		});
+		return this;
+	}
+	update(drawPoints = false) {
+		if (this.visible) {
+			this.items.orderBy(elem => elem.zIndex).forEach(item => {
+				item.render(drawPoints);
+			});
+		}
+		if(drawPoints) MainCanvas.get.drawPoint(this.center);
+	}
+	render(drawPoints = false) {
+		this.update(drawPoints);
+		return this;
 	}
 }
 export class Text extends CnvElement {

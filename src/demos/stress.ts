@@ -4,14 +4,14 @@ import { Angle, COLOR_DEFAULT, Circle, Color, Coord, MainCanvas, Time } from '..
 
 const animate: FrameRequestCallback = async (timestamp: DOMHighResTimeStamp) => {
 	Time.update(timestamp);
-	MainCanvas.get.clean();
+	MainCanvas.clean();
 	Time.showData();
 
 	//#region Stress code
 	for (let i = 0; i < totShapes; i++) {
 		let randRadius = rand0(15);
-		let randX = rand(randRadius/2, MainCanvas.get.cnv.width-randRadius/2);
-		let randY = rand(randRadius/2, MainCanvas.get.cnv.height-randRadius/2);
+		let randX = rand(randRadius/2, MainCanvas.cnv.width-randRadius/2);
+		let randY = rand(randRadius/2, MainCanvas.cnv.height-randRadius/2);
 		new Circle(new Coord(randX, randY), randRadius).render();
 	}
 	//#endregion Stress code

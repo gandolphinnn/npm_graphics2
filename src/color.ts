@@ -156,10 +156,6 @@ export type RGBA = {
 	alpha: number | null
 }
 
-/**
- * @WARNING don't assing anything to this, instead use "Color.default()"
- * @WARNING changing this will impact every future call to Color.default()
-*/
 export class Color {
 	red: number;
 	green: number;
@@ -217,4 +213,8 @@ export function parseRGBA(str: string) {
 	return clampRGBA({red: red, green: green, blue: blue, alpha: coalesce(alpha, 1)});
 }
 
+/**
+ * @WARNING don't assing anything to this, instead use "Color.default()"
+ * @WARNING changing this will impact every future call to Color.default()
+*/
 export const COLOR_DEFAULT	= Color.byName('Black');

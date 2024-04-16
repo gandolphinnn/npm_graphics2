@@ -8,6 +8,7 @@ export * from './color';
 export * from './style';
 export * from './basics';
 export * from './elements';
+export * from './time';
 
 export interface Component { //? This will be useful later, in rigid2 and game2
 	start?(): void;

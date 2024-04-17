@@ -1,6 +1,6 @@
 import { overflow } from "@gandolphinnn/utils";
 import Enumerable from 'linq';
-import { Style } from "./style";
+import { Style, SubStyle } from "./style";
 import { Angle, Coord, Size } from "./basics";
 import { Component, MainCanvas } from "./index";
 
@@ -10,8 +10,8 @@ export enum RenderAction {
 
 export abstract class CnvElement {
 	action: RenderAction;
-	style: Style = Style.empty();
 	zIndex = 0;
+	style: Style = Style.empty();
 
 	protected _center: Coord;
 	get center() { return this._center }
@@ -34,7 +34,57 @@ export abstract class CnvElement {
 		this.action = action;
 		return this;
 	}
-	
+	//#region Style
+	setStyle(style: Style) {
+		this.style = style;
+		return this;
+	}
+	setFillStyle(fillStyle: SubStyle) {
+		this.style.fillStyle = fillStyle;
+		return this;
+	}
+	setStrokeStyle(strokeStyle: SubStyle) {
+		this.style.strokeStyle = strokeStyle;
+		return this;
+	}
+	setLineWidth(lineWidth: number) {
+		this.style.lineWidth = lineWidth;
+		return this;
+	}
+	setTextAlign(textAlign: CanvasTextAlign) {
+		this.style.textAlign = textAlign;
+		return this;
+	}
+	setFont(font: string) {
+		this.style.font = font;
+		return this;
+	}
+	mergeStyle(style: Style) {
+		this.style.mergeWith(style);
+		return this;
+	}
+	mergeFillStyle(fillStyle: SubStyle) {
+		this.style.mergeFillStyle(fillStyle);
+		return this;
+	}
+	mergeStrokeStyle(strokeStyle: SubStyle) {
+		this.style.mergeStrokeStyle(strokeStyle);
+		return this;
+	}
+	mergeLineWidth(lineWidth: number) {
+		this.style.mergeLineWidth(lineWidth);
+		return this;
+	}
+	mergeTextAlign(textAlign: CanvasTextAlign) {
+		this.style.mergeTextAlign(textAlign);
+		return this;
+	}
+	mergeFont(font: string) {
+		this.style.mergeFont(font);
+		return this;
+	}
+	//#endregion Style
+
 	abstract render(drawPoints: boolean): CnvElement;
 	protected execAction() {
 		if (this.action == RenderAction.Both || this.action == RenderAction.Fill) {

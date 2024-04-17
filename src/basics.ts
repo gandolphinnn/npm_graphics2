@@ -29,11 +29,11 @@ export class Coord {
 	/**
 	 * Get a default coordinate (0, 0)
 	 */
-	static get default() {
+	static get origin() {
 		return new Coord(0, 0);
 	}
 	/**
-	 * Sum x/y to a coordinate
+	 * Move THIS coordinate by x/y
 	 */
 	static sumXY(coord: Coord, x: number, y: number) {
 		return new Coord(coord.x + x, coord.y + y)
@@ -42,7 +42,7 @@ export class Coord {
 	 * Sum every coordinate
 	 */
 	static sum(...coords: Coord[]) {
-		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), Coord.default);
+		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), Coord.origin);
 	}
 	/**
 	 * Get the center of multiple points
@@ -84,7 +84,7 @@ export class Coord {
 	/**
 	 * Generate the coordinates of all the points of a regular polygon
 	 */
-	static regularSpread(center: Coord, numberOfCoord: number, distance: number) {
+	static regularPoly(center: Coord, numberOfCoord: number, distance: number) {
 		const angle = 2 * Math.PI / numberOfCoord;
 		return Enumerable.range(0, numberOfCoord).select(i => new Coord(Math.cos(i * angle) * distance + center.x, Math.sin(i * angle) * distance + center.y)).toArray();
 	}

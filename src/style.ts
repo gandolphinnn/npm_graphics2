@@ -12,10 +12,10 @@ export class Style {
 	textAlign?: CanvasTextAlign
 	font?: string
 
-	get fillStyleVal() { return getSubStyleValue(this.fillStyle) }
-	set fillStyleVal(subStyleValue: string | CanvasGradient | CanvasPattern) { this.fillStyle = setSubStyleValue(subStyleValue) }
-	get strokeStyleVal() { return getSubStyleValue(this.strokeStyle) }
-	set strokeStyleVal(subStyleValue: string | CanvasGradient | CanvasPattern) { this.strokeStyle = setSubStyleValue(subStyleValue) }
+	get fillStyleVal() { return Style.subStyleToValue(this.fillStyle) }
+	set fillStyleVal(subStyleValue: string | CanvasGradient | CanvasPattern) { this.fillStyle = Style.valueToSubStyle(subStyleValue) }
+	get strokeStyleVal() { return Style.subStyleToValue(this.strokeStyle) }
+	set strokeStyleVal(subStyleValue: string | CanvasGradient | CanvasPattern) { this.strokeStyle = Style.valueToSubStyle(subStyleValue) }
 
 	constructor(fillStyle?: SubStyle, strokeStyle?: SubStyle, lineWidth?: number, textAlign?: CanvasTextAlign, font?: string) {
 		this.fillStyle = fillStyle;
@@ -27,44 +27,64 @@ export class Style {
 	/**
 	 * undefined is for not specified values
 	 * null is used to set to undefined
-	 * keepNulls = true will set null to null
+	 * false = true will set null to null
 	 */
-	private mergeProperty(currVal: any, newVal: any, keepNulls: boolean) {
+	private mergeProperty(currVal: any, newVal: any) {
 		switch (newVal) {
 			case undefined:
 				return currVal;
 			case null:
-				return keepNulls? null : undefined;
+				return undefined;
 			default: newVal;
 				return newVal;
 		}
 	}
-	mergeFillStyle(newFillStyle: SubStyle, keepNulls = false) {
-		this.fillStyle = this.mergeProperty(this.fillStyleVal, newFillStyle, keepNulls);
+	mergeFillStyle(newFillStyle: SubStyle) {
+		this.fillStyle = this.mergeProperty(this.fillStyleVal, newFillStyle);
 		return this;
 	}
-	mergeStrokeStyle(newStrokeStyle: SubStyle, keepNulls = false) {
-		this.strokeStyle = this.mergeProperty(this.strokeStyleVal, newStrokeStyle, keepNulls);
+	setFillStyle(newFillStyle: SubStyle) {
+		this.fillStyle = newFillStyle;
 		return this;
 	}
-	mergeLineWidth(newLineWidth: number, keepNulls = false) {
-		this.lineWidth = this.mergeProperty(this.lineWidth, newLineWidth, keepNulls);
+	mergeStrokeStyle(newStrokeStyle: SubStyle) {
+		this.strokeStyle = this.mergeProperty(this.strokeStyleVal, newStrokeStyle);
 		return this;
 	}
-	mergeTextAlign(newTextAlign: CanvasTextAlign, keepNulls = false) {
-		this.textAlign = this.mergeProperty(this.textAlign, newTextAlign, keepNulls);
+	setStrokeStyle(newStrokeStyle: SubStyle) {
+		this.strokeStyle = newStrokeStyle;
 		return this;
 	}
-	mergeFont(newFont: string, keepNulls = false) {
-		this.font = this.mergeProperty(this.font, newFont, keepNulls);
+	mergeLineWidth(newLineWidth: number) {
+		this.lineWidth = this.mergeProperty(this.lineWidth, newLineWidth);
 		return this;
 	}
-	mergeWith(newStyle: Style, keepNulls = false) {
-		this.mergeFillStyle(newStyle.fillStyle, keepNulls);
-		this.mergeStrokeStyle(newStyle.strokeStyle, keepNulls);
-		this.mergeLineWidth(newStyle.lineWidth, keepNulls);
-		this.mergeTextAlign(newStyle.textAlign, keepNulls);
-		this.mergeFont(newStyle.font, keepNulls);
+	setLineWidth(newLineWidth: number) {
+		this.lineWidth = newLineWidth;
+		return this;
+	}
+	mergeTextAlign(newTextAlign: CanvasTextAlign) {
+		this.textAlign = this.mergeProperty(this.textAlign, newTextAlign);
+		return this;
+	}
+	setTextAlign(newTextAlign: CanvasTextAlign) {
+		this.textAlign = newTextAlign;
+		return this;
+	}
+	mergeFont(newFont: string) {
+		this.font = this.mergeProperty(this.font, newFont);
+		return this;
+	}
+	setFont(newFont: string) {
+		this.font = newFont;
+		return this;
+	}
+	mergeWith(newStyle: Style) {
+		this.mergeFillStyle(newStyle.fillStyle);
+		this.mergeStrokeStyle(newStyle.strokeStyle);
+		this.mergeLineWidth(newStyle.lineWidth);
+		this.mergeTextAlign(newStyle.textAlign);
+		this.mergeFont(newStyle.font);
 		return this;
 	}
 	static from(...style: Style[]) {
@@ -79,19 +99,19 @@ export class Style {
 	static default() {
 		return Style.from(STYLE_DEFAULT);
 	}
-}
-
-/**
- * If the style object is a Color, return its rgbaStr, otherwise return the object
- */
-export function getSubStyleValue(style: SubStyle): string | CanvasGradient | CanvasPattern {
-	return style instanceof Color? style.rgbaStr : style;
-}
-/**
- * If the style object is a Color, return its rgbaStr, otherwise return the object
- */
-export function setSubStyleValue(value: string | CanvasGradient | CanvasPattern): SubStyle {
-	return typeof value == 'string'? Color.byStr(value) : value;
+	
+	/**
+	 * If the style object is a Color, return its rgbaStr, otherwise return the object
+	 */
+	static subStyleToValue(style: SubStyle): string | CanvasGradient | CanvasPattern {
+		return style instanceof Color? style.rgbaStr : style;
+	}
+	/**
+	 * If the style object is a Color, return its rgbaStr, otherwise return the object
+	 */
+	static valueToSubStyle(value: string | CanvasGradient | CanvasPattern): SubStyle {
+		return typeof value == 'string'? Color.byStr(value) : value;
+	}
 }
 
 /**

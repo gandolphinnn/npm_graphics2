@@ -9,10 +9,8 @@ const animate: FrameRequestCallback = async (timestamp: DOMHighResTimeStamp) => 
 
 	//#region Stress code
 	for (let i = 0; i < totShapes; i++) {
-		let randRadius = rand0(15);
-		let randX = rand(randRadius/2, MainCanvas.cnv.width-randRadius/2);
-		let randY = rand(randRadius/2, MainCanvas.cnv.height-randRadius/2);
-		new Circle(new Coord(randX, randY), randRadius).render();
+		let randRadius = rand0(50);
+		new Circle(MainCanvas.randomCoord(randRadius/2), randRadius).render();
 	}
 	//#endregion Stress code
 

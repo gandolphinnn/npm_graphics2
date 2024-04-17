@@ -1,4 +1,4 @@
-import { clamp, Singleton, isNull } from '@gandolphinnn/utils';
+import { clamp, Singleton, isNull, rand } from '@gandolphinnn/utils';
 import { Color, ColorName, COLORNAME_RGBA } from './color';
 import { Style } from './style';
 import { Angle, Coord } from './basics';
@@ -49,13 +49,23 @@ export class MainCanvas extends Singleton {
 	private static set ctx(ctx: CanvasRenderingContext2D) { this.instance._ctx = ctx };
 	
 	_center: Coord;
-	static get center() { return this.instance._center }
+	static get center() { return this.instance._center.copy() }
 	
 	static drawStyle = Style.default();
 	static writeStyle = Style.default();
 
 	static get bgColor() { return Color.byStr(this.cnv.style.backgroundColor) }
 	static set bgColor(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
+
+	static randomX(padding: number = 0) {
+		return rand(padding, this.cnv.width - padding);
+	}
+	static randomY(padding: number = 0) {
+		return rand(padding, this.cnv.height - padding);
+	}
+	static randomCoord(padding: number = 0) {
+		return new Coord(this.randomX(padding), this.randomY(padding));
+	}
 
 	/**
 	 * Clear the entire canvas
@@ -86,19 +96,20 @@ export class MainCanvas extends Singleton {
 		renderCallBack();
 		this.ctx.restore();
 	}
-
 	static drawPoint(point: Coord) {
 		POINT_DEFAULT.center = point.copy();
 		POINT_DEFAULT.render();
 	}
+
+	//#region Samples
 	static drawSampleColors() {
 		const scale = 100;
 		const whiteTextThreshold = 250;
 		const colors = Object.keys(COLORNAME_RGBA);
 		const maxY = Math.floor(this.cnv.width / scale);
 		let x: number, y: number;
-		const rect = new Rect(Coord.default, {height:scale, width: scale});
-		const text = new Text(Coord.default, 'asd');
+		const rect = new Rect(Coord.origin, {height:scale, width: scale});
+		const text = new Text(Coord.origin, 'asd');
 		text.style.mergeFont('10px Arial');
 		for (let i = 0; i < colors.length; i++) {
 			y = Math.floor(i/maxY);
@@ -119,7 +130,7 @@ export class MainCanvas extends Singleton {
 							.sort((a, b) => a-b);
 		let coord = new Coord(this.center.x - 500, this.center.y - (30 * sampleUnits.length / 2));
 
-		const line = new Line(Coord.default, Coord.default);
+		const line = new Line(Coord.origin, Coord.origin);
 		line.style.mergeLineWidth(4);
 		const text = new Text(coord, '');
 		text.style.mergeFont('20px Arial').mergeTextAlign('right');
@@ -134,9 +145,7 @@ export class MainCanvas extends Singleton {
 		});
 	}
 	static drawSampleMetric(scale = 50) {
-		scale = clamp(scale, 25, Infinity);
-
-		const line = new Line(Coord.default, new Coord(0, this.cnv.height));
+		const line = new Line(Coord.origin, new Coord(0, this.cnv.height));
 		line.style.mergeLineWidth(1).mergeStrokeStyle(Color.byName('Black', .3));
 		const text = new Text(new Coord(0, 10), '');
 		text.style.mergeTextAlign('right').mergeFillStyle(Color.byName('Black', .5));
@@ -149,7 +158,7 @@ export class MainCanvas extends Singleton {
 			text.render();
 		}
 
-		line.points = [Coord.default, new Coord(this.cnv.width, 0)];
+		line.points = [Coord.origin, new Coord(this.cnv.width, 0)];
 		text.style.mergeTextAlign('left');
 
 		for (let y = scale; y < this.cnv.height; y += scale) { //? Horizontal lines
@@ -162,7 +171,8 @@ export class MainCanvas extends Singleton {
 		}
 		new Circle(this.center, 5).render();
 	}
+	//#endregion Samples
 }
 
-const POINT_DEFAULT = new Circle(Coord.default, 3).setAction(RenderAction.Fill);
+const POINT_DEFAULT = new Circle(Coord.origin, 3).setAction(RenderAction.Fill);
 	POINT_DEFAULT.style.mergeFillStyle(Color.byName('Black'));

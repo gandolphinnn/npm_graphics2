@@ -1,10 +1,12 @@
 import { Angle, Circle, CircleSector, CircleSlice, CnvElement, Color, Coord, Line, MainCanvas, Mesh, Poly, Rect, Style, Text } from '../index.js';
 
-MainCanvas.drawSampleMetric();
+const p = MainCanvas.ratioToPixel(10).width;
+console.log(p);
+
+MainCanvas.drawSampleMetric(p);
 MainCanvas.drawStyle
 			.setFillStyle(Color.byValues(0, 0, 255, .4))
 			.setStrokeStyle(Color.byValues(0, 0, 0, 1))
-			.setLineWidth(1);
 
 const text1		= new Text(MainCanvas.center.sumXY(-100, 0), 'Hello World').setFont('24px Arial').setTextAlign('center');
 const text2		= new Text(MainCanvas.center.sumXY(+100, 0), 'Hello World').setFont('bold italic 30px serif').setTextAlign('left');

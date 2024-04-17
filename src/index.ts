@@ -160,7 +160,7 @@ export class MainCanvas extends Singleton {
 	}
 	static drawSampleMetric(scale = 50) {
 		const line = new Line(Coord.origin, new Coord(0, this.cnv.height));
-		line.style.mergeLineWidth(1).mergeStrokeStyle(Color.byName('Black', .3));
+		line.style.mergeLineWidth(MainCanvas.ratioToPixel(.1).width).mergeStrokeStyle(Color.byName('Black', .3));
 		const text = new Text(new Coord(0, 10), '');
 		text.style.mergeTextAlign('right').mergeFillStyle(Color.byName('Black', .5));
 		
@@ -168,7 +168,7 @@ export class MainCanvas extends Singleton {
 			line.center = new Coord(x, this.center.y);
 			line.render();
 			text.center = new Coord(x-3, 10);
-			text.content = x.toString();
+			text.content = parseFloat(x.toFixed(2)).toString();
 			text.render();
 		}
 
@@ -180,7 +180,7 @@ export class MainCanvas extends Singleton {
 			line.center.x = this.center.x;
 			line.render();
 			text.center = new Coord(5, y-5);
-			text.content = y.toString();
+			text.content = parseFloat(y.toFixed(2)).toString();
 			text.render();
 		}
 		new Circle(this.center, 5).render();

@@ -1,7 +1,7 @@
 import { clamp, Singleton, isNull, rand } from '@gandolphinnn/utils';
 import { Color, ColorName, COLORNAME_RGBA } from './color';
 import { Style } from './style';
-import { Angle, Coord } from './basics';
+import { Angle, Coord, Size } from './basics';
 import { Circle, Line, Poly, Rect, RenderAction, Text } from './elements';
 
 export * from './color';
@@ -65,6 +65,20 @@ export class MainCanvas extends Singleton {
 	}
 	static randomCoord(padding: number = 0) {
 		return new Coord(this.randomX(padding), this.randomY(padding));
+	}
+
+	/**
+	 * Returns the ratio of the canvas size to the given pixels
+	 */
+	static pixelToRatio(pixels: number): Size {
+		return { width: pixels / this.cnv.width * 100, height: pixels / this.cnv.height * 100 };
+	}
+	
+	/**
+	 * Returns the pixel size of the given ratio
+	 */
+	static ratioToPixel(ratio: number): Size {
+		return { width: ratio * (this.cnv.width / 100), height: ratio * (this.cnv.height/100) };
 	}
 
 	/**

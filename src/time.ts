@@ -80,7 +80,7 @@ export class Time {
 		console.log(`Time {\n\tdeltaTime: ${this.deltaTime},\n\ttimeScale: ${this.timeScale},\n\tlastFrameTime: ${this.lastFrameTime},\n\tframeTime: ${this.currFrameTime},\n\tframeCount: ${this.frameCount},\n\tfps: ${this.fps},\n\tfpsInterval: ${this.fpsInterval},\n\tfpsTime: ${this.fpsTime},\n\tfpsCount: ${this.fpsCount},\n\tfpsUpdateInterval: ${this.fpsUpdateInterval},\n\tfpsUpdateCount: ${this.fpsUpdateCount}\n}`)
 	}
 	static showData() {
-		const t = new Text(new Coord(25, 10), '');
+		const t = new Text(new Coord(5, 0), '');
 		t.style.mergeTextAlign('left').mergeFont('12px Arial').mergeFillStyle(Color.byName('Black'));
 		for (const prop in this) {
 			// @ts-ignore

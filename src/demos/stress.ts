@@ -9,8 +9,7 @@ const animate: FrameRequestCallback = async (timestamp: DOMHighResTimeStamp) => 
 
 	//#region Stress code
 	for (let i = 0; i < totShapes; i++) {
-		let randRadius = rand0(50);
-		new Circle(MainCanvas.randomCoord(randRadius/2), randRadius).render();
+		new Circle(MainCanvas.randomCoord(100), radius).render();
 	}
 	//#endregion Stress code
 
@@ -18,4 +17,5 @@ const animate: FrameRequestCallback = async (timestamp: DOMHighResTimeStamp) => 
 }
 COLOR_DEFAULT.alpha = 0.1;
 const totShapes = 20000;
+const radius = 10;
 animate(0);

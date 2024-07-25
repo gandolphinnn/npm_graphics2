@@ -52,8 +52,8 @@ const text		= new Text(new Coord(250, 300), 'TEST')
 
 const mesh		= new Mesh(new Coord(250, 400), text, line, circle, slice, sector, poly);
 
-console.table(mesh.items.toArray());
+console.table(mesh.elements.toArray());
 
-mesh.moveBy(600, -50).update(true)
-mesh.moveBy(300, -50).update()
+mesh.moveBy(600, -50).render(true)
+mesh.moveBy(300, -50).render()
 /* */

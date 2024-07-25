@@ -1,6 +1,6 @@
 import { arrPivot, overflow } from "@gandolphinnn/utils";
 import Enumerable from 'linq';
-import { Circle } from "./index";
+import { Circle, MainCanvas } from "./index";
 
 export type Size = {
 	width: number;
@@ -10,6 +10,17 @@ export type Size = {
 export class Coord {
 	x: number;
 	y: number;
+
+	/**
+	 * Check if the coordinate is visible on the canvas
+	 */
+	get isVisible() {
+		return this.x >= 0
+			&& this.y >= 0
+			&& this.x <= MainCanvas.cnv.width
+			&& this.y <= MainCanvas.cnv.height
+	}
+
 	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;

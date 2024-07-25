@@ -17,6 +17,12 @@ export abstract class CnvElement {
 	get center() { return this._center }
 	set center(center: Coord) { this._center = center }
 
+	/**
+	 * Check if the element is visible on the canvas
+	 * May cause false positives in some elements
+	 */
+	abstract get isVisible(): boolean;
+
 	constructor(action: RenderAction, center: Coord) {
 		this.action = action;
 		this._center = center;
@@ -105,42 +111,48 @@ export abstract class CnvElement {
  * A collection of CnvElements
  */
 export class Mesh extends CnvElement implements Component {
-	items: Enumerable.IEnumerable<CnvElement>;
+	elements: Enumerable.IEnumerable<CnvElement>;
 	zIndex: number;
-	visible: boolean = true;
+	doRender: boolean = true;
 	
 	get center() { return this._center }
 	set center(center: Coord) {
 		const diff = Coord.difference(center, this.center);
 		this.moveBy(diff.x, diff.y);
 	}
+
+	get isVisible() {
+		return this.doRender && this.elements.any(item => item.isVisible);
+	}
 	constructor(center: Coord, ...items: CnvElement[]) {
 		super(RenderAction.Both, center);
-		this.items = Enumerable.from(items);
+		this.elements = Enumerable.from(items);
 	}
 	moveBy(x: number, y: number) {
 		//? keep it like this to trigger the setter
 		this.center.sumXY(x, y);
-		this.items.forEach(item => {
+		this.elements.forEach(item => {
 			item.moveBy(x, y);
 		});
 		return this;
 	}
-	update(drawPoints = false) {
-		if (this.visible) {
-			this.items.orderBy(elem => elem.zIndex).forEach(item => {
+	update() {
+		this.render();
+	}
+	render(drawPoints = false) {
+		if (this.isVisible) {
+			this.elements.orderBy(elem => elem.zIndex).forEach(item => {
 				item.render(drawPoints);
 			});
 		}
 		if(drawPoints) MainCanvas.drawPoint(this.center);
-	}
-	render(drawPoints = false) {
-		this.update(drawPoints);
 		return this;
 	}
 }
 export class Text extends CnvElement {
 	content: string;
+
+	get isVisible() { return this.action != RenderAction.None }
 
 	constructor(center: Coord, content: string) {
 		super(RenderAction.Fill, center);
@@ -167,12 +179,15 @@ export abstract class CnvDrawing extends CnvElement {
 export class Line extends CnvDrawing {
 	points: [Coord, Coord];
 
+	get length() {
+		return Coord.distance(this.points[0], this.points[1]);
+	}
+
+	get isVisible() { return this.action != RenderAction.None && this.points.some(p => p.isVisible) }
+
 	constructor(...points: [Coord, Coord]) {
 		super(RenderAction.Stroke, Coord.center(...points));
 		this.points = points;
-	}
-	get length() {
-		return Coord.distance(this.points[0], this.points[1]);
 	}
 	/**
 	 * return a NEW COORD based on the 2 points
@@ -210,6 +225,8 @@ export class Rect extends CnvDrawing {
 	}
 	get perimeter() { return (this.size.height + this.size.width) * 2 }
 	get area() { return this.size.height * this.size.width }
+
+	get isVisible() { return this.action != RenderAction.None && this.points.some(p => p.isVisible) }
 
 	constructor(center: Coord, size: Size) {
 		super(RenderAction.Both, center);
@@ -253,6 +270,9 @@ export class Poly extends CnvDrawing {
 			point.sumXY(diff.x, diff.y)
 		});
 	}
+
+	get isVisible() { return this.action != RenderAction.None && this.points.some(p => p.isVisible) }
+
 	constructor(...points: Coord[]) {
 		super(RenderAction.Both, Coord.center(...points));
 		this.points = points;
@@ -282,6 +302,14 @@ export class Circle extends CnvDrawing {
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
 
+	get isVisible() {
+		return this.action != RenderAction.None
+			&& this.center.x >= -this.radius
+			&& this.center.y >= -this.radius
+			&& this.center.x <= MainCanvas.cnv.width + this.radius
+			&& this.center.y <= MainCanvas.cnv.height + this.radius
+	}
+	
 	constructor(center: Coord, radius: number) {
 		super(RenderAction.Both, center);
 		this.radius = radius;
@@ -307,6 +335,14 @@ export class CircleSector extends CnvDrawing {
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
+	
+	get isVisible() {
+		return this.action != RenderAction.None
+			&& this.center.x >= -this.radius
+			&& this.center.y >= -this.radius
+			&& this.center.x <= MainCanvas.cnv.width + this.radius
+			&& this.center.y <= MainCanvas.cnv.height + this.radius
+	}
 
 	constructor(center: Coord, radius: number, start: Angle, end: Angle, counterClockwise = true) {
 		super(RenderAction.Both, center);
@@ -337,6 +373,14 @@ export class CircleSlice extends CnvDrawing {
 
 	get diameter() { return this.radius * 2 }
 	set diameter(diameter: number) { this.radius = diameter / 2 }
+
+	get isVisible() {
+		return this.action != RenderAction.None
+			&& this.center.x >= -this.radius
+			&& this.center.y >= -this.radius
+			&& this.center.x <= MainCanvas.cnv.width + this.radius
+			&& this.center.y <= MainCanvas.cnv.height + this.radius
+	}
 
 	constructor(center: Coord, radius: number, start: Angle, end: Angle, counterClockwise = true) {
 		super(RenderAction.Both, center);

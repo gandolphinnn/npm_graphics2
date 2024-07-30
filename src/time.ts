@@ -1,5 +1,8 @@
 import { Color, Coord, Text } from "./index";
 
+/**
+ * The Time class contains properties and methods related to time.
+ */
 export class Time {
 	/**
 	 * The time difference between the current frame and the previous frame.
@@ -76,8 +79,11 @@ export class Time {
 			this.fpsUpdateCount++;
 		}
 	}
+	/**
+	 * Logs the time-related properties to the console.
+	 */
 	static logData() {
-		console.log(`Time {\n\tdeltaTime: ${this.deltaTime},\n\ttimeScale: ${this.timeScale},\n\tlastFrameTime: ${this.lastFrameTime},\n\tframeTime: ${this.currFrameTime},\n\tframeCount: ${this.frameCount},\n\tfps: ${this.fps},\n\tfpsInterval: ${this.fpsInterval},\n\tfpsTime: ${this.fpsTime},\n\tfpsCount: ${this.fpsCount},\n\tfpsUpdateInterval: ${this.fpsUpdateInterval},\n\tfpsUpdateCount: ${this.fpsUpdateCount}\n}`)
+		console.table(`Time {\n\tdeltaTime: ${this.deltaTime},\n\ttimeScale: ${this.timeScale},\n\tlastFrameTime: ${this.lastFrameTime},\n\tframeTime: ${this.currFrameTime},\n\tframeCount: ${this.frameCount},\n\tfps: ${this.fps},\n\tfpsInterval: ${this.fpsInterval},\n\tfpsTime: ${this.fpsTime},\n\tfpsCount: ${this.fpsCount},\n\tfpsUpdateInterval: ${this.fpsUpdateInterval},\n\tfpsUpdateCount: ${this.fpsUpdateCount}\n}`)
 	}
 	static showData() {
 		const t = new Text(new Coord(5, 0), '');

@@ -25,6 +25,7 @@ export class Coord {
 		this.x = x;
 		this.y = y;
 	}
+
 	/**
 	 * Return a new Coord with the same x and y
 	 */
@@ -44,7 +45,7 @@ export class Coord {
 		return new Coord(0, 0);
 	}
 	/**
-	 * Move THIS coordinate by x/y
+	 * Get a new coordinate with the sum of x/y
 	 */
 	static sumXY(coord: Coord, x: number, y: number) {
 		return new Coord(coord.x + x, coord.y + y)
@@ -56,7 +57,7 @@ export class Coord {
 		return coords.reduce((acc, curr) => new Coord(acc.x + curr.x, acc.y + curr.y), Coord.origin);
 	}
 	/**
-	 * Get the center of multiple points
+	 * Get the center of multiple coordinates
 	 */
 	static center(...coords: Coord[]) {
 		return new Coord(this.sum(...coords).x/coords.length, this.sum(...coords).y/coords.length);
@@ -71,7 +72,7 @@ export class Coord {
 	 * The width/height size of an area defined by multiple points
 	 */
 	static size(...coords: Coord[]) {
-		const pivoted = arrPivot(coords);	
+		const pivoted: { x: number[], y: number[] } = arrPivot(coords);	
 		const cMax = new Coord(Math.max(...pivoted.x), Math.max(...pivoted.y));
 		const cMin = new Coord(Math.min(...pivoted.x), Math.min(...pivoted.y));
 		return {width: Math.abs(cMax.x - cMin.x), height: Math.abs(cMax.y - cMin.y)} as Size;
@@ -85,7 +86,7 @@ export class Coord {
 	/**
 	 * Rotate some coordinates around a center by an angle
 	 */
-	static rotate(center: Coord, angle: Angle, ...coords: Coord[]) {
+	static rotate(center: Coord, angle: Angle, ...coords: Coord[]): Coord[] {
 		return coords.map(coord => {
 			const x = center.x + (coord.x - center.x) * angle.cos - (coord.y - center.y) * angle.sin;
 			const y = center.y + (coord.x - center.x) * angle.sin + (coord.y - center.y) * angle.cos;

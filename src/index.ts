@@ -57,30 +57,36 @@ export class MainCanvas extends Singleton {
 	static get bgColor() { return Color.byStr(this.cnv.style.backgroundColor) }
 	static set bgColor(color: Color) { this.cnv.style.backgroundColor = color.rgbaStr }
 
+	/**
+	 * Returns a random X value inside the canvas, with optional internal padding
+	 */
 	static randomX(padding: number = 0) {
 		return rand(padding, this.cnv.width - padding);
 	}
+	/**
+	 * Returns a random Y value inside the canvas, with optional internal padding
+	 */
 	static randomY(padding: number = 0) {
 		return rand(padding, this.cnv.height - padding);
 	}
+	/**
+	 * Returns a random coordinate inside the canvas, with optional internal padding
+	 */
 	static randomCoord(padding: number = 0) {
 		return new Coord(this.randomX(padding), this.randomY(padding));
 	}
-
 	/**
 	 * Returns the ratio of the canvas size to the given pixels
 	 */
 	static pixelToRatio(pixels: number): Size {
 		return { width: pixels / this.cnv.width * 100, height: pixels / this.cnv.height * 100 };
 	}
-	
 	/**
 	 * Returns the pixel size of the given ratio
 	 */
 	static ratioToPixel(ratio: number): Size {
 		return { width: ratio * (this.cnv.width / 100), height: ratio * (this.cnv.height/100) };
 	}
-
 	/**
 	 * Clear the entire canvas
 	 */
@@ -99,6 +105,9 @@ export class MainCanvas extends Singleton {
 		renderCallBack();
 		this.ctx.restore();
 	}
+	/**
+	 * Save the context, apply the style, execute the callback and restore the context
+	 */
 	static write(writeStyle: Style, renderCallBack: Function) {
 		this.ctx.save();		
 		const toApply = Style.from(this.writeStyle, writeStyle);
@@ -110,6 +119,9 @@ export class MainCanvas extends Singleton {
 		renderCallBack();
 		this.ctx.restore();
 	}
+	/**
+	 * Draw a point on the canvas. Uses the POINT_DEFAULT circle
+	 */
 	static drawPoint(point: Coord) {
 		POINT_DEFAULT.center = point.copy();
 		POINT_DEFAULT.render();
@@ -188,5 +200,6 @@ export class MainCanvas extends Singleton {
 	//#endregion Samples
 }
 
-const POINT_DEFAULT = new Circle(Coord.origin, 3).setAction(RenderAction.Fill);
-	POINT_DEFAULT.style.mergeFillStyle(Color.byName('Black'));
+export const POINT_DEFAULT = new Circle(Coord.origin, 3)
+								.setAction(RenderAction.Fill)
+								.setFillStyle(Color.byName('Black'));

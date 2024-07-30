@@ -2,12 +2,31 @@ import { Color, COLOR_DEFAULT } from './color';
 
 export type SubStyle = Color | CanvasGradient | CanvasPattern;
 
+/**
+ * Defines the style of a CnvElement.
+ * 
+ * ### Text Alignment
+ * @warning the textAlign property is counter-intuitive in plain JavaScript:
+ * "left" means the center is just to the left of the text
+ * 
+ * ### SubStyle
+ * A SubStyle is a Color, CanvasGradient or CanvasPattern.
+ * Is used to define the fillStyle and strokeStyle properties.
+ * 
+ * For conversion to and from CanvasRenderingContext2D valid values, use the fillStyleVal and strokeStyleVal properties.
+ * 
+ * ### Merge Methods
+ * "set" methods just set the property, while "merge" methods will perform merging logic:
+ * - UNDEFINED is for not specified values, so nothing will be changed
+ * - NULL is used to set the value to undefined, so the value will be removed
+ * - A valid value will be set normally
+ */
 export class Style {
 	fillStyle?: SubStyle
 	strokeStyle?: SubStyle
 	lineWidth?: number
 	/**
-	 * @example "left" means the center is just to the left of the text
+	 * @warning "left" means the center is just to the left of the text
 	*/
 	textAlign?: CanvasTextAlign
 	font?: string
@@ -27,7 +46,6 @@ export class Style {
 	/**
 	 * undefined is for not specified values
 	 * null is used to set to undefined
-	 * false = true will set null to null
 	 */
 	private mergeProperty(currVal: any, newVal: any) {
 		switch (newVal) {
